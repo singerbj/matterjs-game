@@ -1,22 +1,31 @@
-const p2 = require('p2');
+var Matter = require('matter-js/build/matter.js');
 const raf = require('raf');
 const Player = require('./entities/player');
 
 module.exports = function(callback){
-    var world;
+    var engine, render;
     var scaleX = 50;
     var scaleY = -50;
 
     var init = function() {
-        world = new p2.World({
-            gravity: [0, 0]
-        });
+        engine = Matter.Engine.create();
+
+        // render = Matter.Render.create({
+        //     element: document.body,
+        //     engine: engine
+        //     // options: options
+        // });
+
+        Matter.Engine.run(engine);
+        // Matter.Render.run(render);
+        engine.world.gravity.x = 0;
+        engine.world.gravity.y = 0;
     };
 
-    var animate = function () {
-        callback();
+    var animate = function (t) {
         raf(animate);
-        world.step(1 / 60);
+        callback();
+        Matter.Engine.update(engine, 1000 / 60);
     };
 
     init();
@@ -25,19 +34,22 @@ module.exports = function(callback){
     return {
         addPlayer: function(player){
             console.log('player added');
-            world.addBody(player.p2);
+            Matter.World.addBody(engine.world, player.matterjs);
         },
-        removePlayer: function(player){
-            console.log('player removed');
-            world.removeBody(player.p2);
-        },
-        addWall: function(player){
+        // getBody: function(playerId){
+        //     world.getBodyById(playerId);
+        // },
+        // removePlayer: function(player){
+        //     console.log('player removed');
+        //     world.removeBody(player.p2);
+        // },
+        addWall: function(wall){
             console.log('wall added');
-            world.addBody(player.p2);
-        },
-        removeWall: function(player){
-            console.log('wall removed');
-            world.removeBody(player.p2);
+            Matter.World.addBody(engine.world, wall.matterjs);
         }
+        // removeWall: function(wall){
+        //     console.log('wall removed');
+        //     world.removeBody(wall.p2);
+        // }
     };
 }

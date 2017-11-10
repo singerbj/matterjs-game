@@ -1,76 +1,90 @@
 const Net = require('net');
+const Matter = require('matter-js/build/matter.js');
+const raf = require('raf');
+const Decoder = new TextDecoder("utf-8");
 
-var Game = require('../shared/game.js');
+require('../shared/game.js')(confirm("Start the server?"));
 
-// Autodetect, create and append the renderer to the body element
-var renderer = PIXI.autoDetectRenderer(960, 540, { backgroundColor: 0x000000, antialias: true });
-document.body.appendChild(renderer.view);
+var bodyMap = {};
+var playerMap = {};
+var wallMap = {};
 
-// Create the main stage for your display objects
-var stage = new PIXI.Container();
-// Initialize the pixi Graphics class
-var graphics = new PIXI.Graphics();
+var client = new Net.Socket();
+client.connect(6754, '127.0.0.1', function() {
+    console.log('Connected');
+});
 
-var graphicsMap = {};
+client.on('data', function(data) {
+    var parsedData = JSON.parse(Decoder.decode(data));
+    console.log('Received: ', parsedData);
+    playerMap = parsedData.playerMap;
+    wallMap = parsedData.wallMap;
+});
 
-var wall;
-var renderWalls = function(){
-    Object.keys(Game.wallMap).forEach(function(key){
-        wall = Game.wallMap[key];
-        if(!graphicsMap[player.id]){
-            graphics.beginFill(0xe74c3c); // Red
-            graphics.drawRectangle(wall.x, wall.y, wall.w, wall.h);
-            graphics.endFill();
-            stage.addChild(graphics);
-            graphicsMap[player.id] = graphics;
+client.on('close', function() {
+    console.log('Connection closed');
+});
+
+var sendEvent = function(event){
+    client.write(JSON.stringify(event));
+};
+
+require('./input')(sendEvent);
+
+var engine, render, entity, body;
+var renderObjects = function(entityMap){
+    Object.keys(entityMap).forEach(function(key){
+        entity = entityMap[key];
+        if(!bodyMap[entity.id]){
+            if(entity.shape === 'rectangle'){
+                body = Matter.Bodies.rectangle(entity.x, entity.y, entity.w, entity.h);
+            }else if(entity.shape === 'circle'){
+                body = Matter.Bodies.circle(entity.x, entity.y, entity.r);
+            }
+            body.isSensor = true;
+            Matter.Body.rotate(body, body.angle || 0);
+            Matter.World.addBody(engine.world, body);
+            bodyMap[entity.id] = body;
         }else{
-            graphicsMap[player.id].x = wall.x;
-            graphicsMap[player.id].y = wall.y;
-            graphicsMap[player.id].w = wall.w;
-            graphicsMap[player.id].h = wall.h;
+            bodyMap[entity.id].position.x = entity.x;
+            bodyMap[entity.id].position.y = entity.y;
         }
     });
 };
 
-var player;
-var renderPlayers = function(){
-    Object.keys(Game.playerMap).forEach(function(key){
-        player = Game.playerMap[key];
-        if(!graphicsMap[player.id]){
-            graphics.beginFill(0x33ccff); //Blue maybe?
-            graphics.drawCircle(player.x, player.y, player.r);
-            graphics.endFill();
-            stage.addChild(graphics);
-            graphicsMap[player.id] = graphics;
-        }else{
-            graphicsMap[player.id].x = player.x;
-            graphicsMap[player.id].y = player.y;
-            graphicsMap[player.id].r = player.r;
-        }
+var init = function() {
+    engine = Matter.Engine.create();
+    render = Matter.Render.create({
+        element: document.body,
+        engine: engine
     });
+    Matter.Engine.run(engine);
+    Matter.Render.run(render);
+    engine.world.gravity.x = 0;
+    engine.world.gravity.y = 0;
 };
 
-var animate = function () {
-    console.log(Game.wallMap, Game.playerMap);
-
-    renderWalls();
-    renderPlayers();
-    renderer.render(stage);
-    requestAnimationFrame(animate);
+var animate = function (t) {
+    raf(animate);
+    renderObjects(wallMap);
+    renderObjects(playerMap);
+    Matter.Engine.update(engine, 1000 / 60);
 };
+
+init();
 animate();
 
 
 
 // // Set the fill color
-// graphics.beginFill(0xe74c3c); // Red
+// body.beginFill(0xe74c3c); // Red
 //
 // // Draw a circle
-// graphics.drawCircle(60, 185, 40); // drawCircle(x, y, radius)
-// graphics.drawCircle(0, 0, 10); // drawCircle(x, y, radius)
+// body.drawCircle(60, 185, 40); // drawCircle(x, y, radius)
+// body.drawCircle(0, 0, 10); // drawCircle(x, y, radius)
 //
 // // Applies fill to lines and shapes since the last call to beginFill.
-// graphics.endFill();
+// body.endFill();
 //
-// // Add the graphics to the stage
-// stage.addChild(graphics);
+// // Add the body to the stage
+// stage.addChild(body);

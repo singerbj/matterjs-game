@@ -5,12 +5,8 @@ module.exports = {
         return uuidv4();
     },
     serializeMap: function(obj){
-        var mapCopy = {}, copy;
-        Object.keys(obj).forEach(function(id){
-            copy = Object.assign({}, obj[id]);
-            delete copy.p2;
-            mapCopy[id] = copy;
+        return Object.keys(obj).map(function(id){
+            return obj[id].serialize();
         });
-        return mapCopy;
     }
 }

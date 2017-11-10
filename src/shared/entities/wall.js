@@ -1,31 +1,25 @@
 var Matter = require('matter-js/build/matter.js');
 const Helpers = require('../helpers');
 
-module.exports = function(x, y){
-    var r = 20;
-    var body = Matter.Bodies.circle(x, y, r);
+module.exports = function(x, y, w, h){
+    var body = Matter.Bodies.rectangle(x, y, w, h);
     Matter.Body.setInertia(body, Infinity);
     return {
         id: Helpers.getUUID(),
-        shape: 'circle',
+        shape: 'rectangle',
         x: x,
         y: y,
-        r: r,
-        speed: 1.5,
-        moving: {
-            up: false,
-            down: false,
-            left: false,
-            right: false
-        },
-        firing: false,
+        w: w,
+        h: h,
+        angle: body.angle,
         matterjs: body,
         serialize: function(){
             return {
                 shape: this.shape,
                 x: this.x,
                 y: this.y,
-                r: this.r
+                w: this.w,
+                h: this.h
             }
         }
     };
