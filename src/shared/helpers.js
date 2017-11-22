@@ -6,7 +6,14 @@ module.exports = {
     },
     serializeMap: function(obj){
         return Object.keys(obj).map(function(id){
-            return obj[id].serialize();
+            if(id[0] !== '_'){
+                return obj[id].serialize();
+            }else{
+                return obj[id];
+            }
         });
+    },
+    rand: function (min, max) {
+            return Math.floor(Math.random() * (max - min)) + min;
     }
 }

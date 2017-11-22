@@ -39,17 +39,17 @@ module.exports = function(callback){
         // getBody: function(playerId){
         //     world.getBodyById(playerId);
         // },
-        // removePlayer: function(player){
-        //     console.log('player removed');
-        //     world.removeBody(player.p2);
-        // },
+        removePlayer: function(player){
+            console.log('player removed');
+            Matter.Composite.remove(engine.world, player.matterjs);
+        },
         addWall: function(wall){
             console.log('wall added');
             Matter.World.addBody(engine.world, wall.matterjs);
+        },
+        removeWall: function(wall){
+            console.log('wall removed');
+            Matter.Composite.remove(engine.world, wall.matterjs);
         }
-        // removeWall: function(wall){
-        //     console.log('wall removed');
-        //     world.removeBody(wall.p2);
-        // }
     };
 }

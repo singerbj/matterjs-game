@@ -2,27 +2,36 @@ const Net = require('net');
 const Matter = require('matter-js/build/matter.js');
 const raf = require('raf');
 const Decoder = new TextDecoder("utf-8");
+const Paper = require('paper');
 
 require('../shared/game.js')(confirm("Start the server?"));
 
 var bodyMap = {};
-var playerMap = {};
-var wallMap = {};
+var playerMap = [];
+var wallMap = [];
+var toDelete = [];
+var player;
+var canvas = document.querySelector('#canvas');
 
 var client = new Net.Socket();
 client.connect(6754, '127.0.0.1', function() {
-    console.log('Connected');
+    // console.log('Connected');
 });
 
 client.on('data', function(data) {
-    var parsedData = JSON.parse(Decoder.decode(data));
-    console.log('Received: ', parsedData);
-    playerMap = parsedData.playerMap;
-    wallMap = parsedData.wallMap;
+    var decodedDataList = Decoder.decode(data).replace(/\}\{/g,'}}{{').split('}{');
+    var parsedData;
+    decodedDataList.forEach(function(decodedData){
+        parsedData = JSON.parse(decodedData);
+        playerMap = parsedData.playerMap;
+        wallMap = parsedData.wallMap;
+        toDelete = parsedData.toDelete;
+        player = parsedData.player;
+    });
 });
 
 client.on('close', function() {
-    console.log('Connection closed');
+    // console.log('Connection closed');
 });
 
 var sendEvent = function(event){
@@ -31,60 +40,52 @@ var sendEvent = function(event){
 
 require('./input')(sendEvent);
 
-var engine, render, entity, body;
+var engine, render, entity, offsetX, offsetY;
 var renderObjects = function(entityMap){
-    Object.keys(entityMap).forEach(function(key){
-        entity = entityMap[key];
-        if(!bodyMap[entity.id]){
-            if(entity.shape === 'rectangle'){
-                body = Matter.Bodies.rectangle(entity.x, entity.y, entity.w, entity.h);
-            }else if(entity.shape === 'circle'){
-                body = Matter.Bodies.circle(entity.x, entity.y, entity.r);
+    if(player){
+        offsetX = (canvas.width / 4) - player.x;
+        offsetY = (canvas.height / 4) - player.y;
+
+        entityMap.forEach(function(entity){
+            if(!(entity instanceof Array)){
+                if(!bodyMap[entity.id]){
+                    var body;
+                    if(entity.type === 'wall'){
+                        body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                        body.fillColor = 'green';
+                    }else if(entity.type === 'player'){
+                        body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                        body.fillColor = 'blue';
+                    }
+                    bodyMap[entity.id] = body;
+                }else{
+                    bodyMap[entity.id].position = new Point(entity.x + offsetX, entity.y + offsetY);
+                }
             }
-            body.isSensor = true;
-            Matter.Body.rotate(body, body.angle || 0);
-            Matter.World.addBody(engine.world, body);
-            bodyMap[entity.id] = body;
-        }else{
-            bodyMap[entity.id].position.x = entity.x;
-            bodyMap[entity.id].position.y = entity.y;
-        }
-    });
+        });
+    }
+
 };
 
-var init = function() {
-    engine = Matter.Engine.create();
-    render = Matter.Render.create({
-        element: document.body,
-        engine: engine
-    });
-    Matter.Engine.run(engine);
-    Matter.Render.run(render);
-    engine.world.gravity.x = 0;
-    engine.world.gravity.y = 0;
+var deleteObjects = function(objectIdArray){
+    if(objectIdArray.forEach){
+        objectIdArray.forEach(function(id){
+            if(bodyMap[id]){
+                bodyMap[id].remove();
+                delete bodyMap[id];
+            }
+        });
+    }
 };
 
-var animate = function (t) {
-    raf(animate);
-    renderObjects(wallMap);
+Paper.install(window);
+Paper.setup(canvas);
+view.onFrame = function(){
+    deleteObjects(toDelete);
     renderObjects(playerMap);
-    Matter.Engine.update(engine, 1000 / 60);
-};
+    renderObjects(wallMap);
+}
 
-init();
-animate();
-
-
-
-// // Set the fill color
-// body.beginFill(0xe74c3c); // Red
-//
-// // Draw a circle
-// body.drawCircle(60, 185, 40); // drawCircle(x, y, radius)
-// body.drawCircle(0, 0, 10); // drawCircle(x, y, radius)
-//
-// // Applies fill to lines and shapes since the last call to beginFill.
-// body.endFill();
-//
-// // Add the body to the stage
-// stage.addChild(body);
+window.Paper = Paper;
+// r = new Paper.Path.Rectangle(300, 300, 200, 200);
+// r.fillColor = 'blue';
