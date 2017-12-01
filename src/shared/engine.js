@@ -24,7 +24,7 @@ module.exports = function(callback){
 
     var animate = function (t) {
         raf(animate);
-        callback();
+        callback(engine);
         Matter.Engine.update(engine, 1000 / 60);
     };
 
