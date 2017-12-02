@@ -1,11 +1,11 @@
 const Matter = require('matter-js/build/matter.js');
 const Helpers = require('../helpers');
 const Gun = require('./gun');
+const Raycast = require('../raycast');
 
 module.exports = function(x, y){
-    var r = 15;
+    var r = 8;
     var body = Matter.Bodies.circle(x, y, r*2, r*2);
-    console.log(body.angle);
     Matter.Body.setInertia(body, Infinity);
     return {
         id: Helpers.getUUID(),
@@ -30,18 +30,15 @@ module.exports = function(x, y){
         aim: 0,
         gun: new Gun(),
         handleFiring: function(engine){
+            var self = this;
             var time = Date.now();
             if(this.firing && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)){
                 this.lastShot = time;
-
-                // var x = Math.sqrt((Math.pow(this.gun.range), 2) / this.aim) - (Math.pow() )
-                // a^2 + b^2 = c^2
 
                 var k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
 
                 var shotX;
                 var shotY;
-                console.log(this.mouse.x, this.x)
                 if (this.mouse.x < this.x) {
                     shotX = this.x - k;
                     shotY = this.y - (k * this.aim);
@@ -51,9 +48,9 @@ module.exports = function(x, y){
                 }
 
                 if (this.aim === -Infinity) {
-                    shotY = this.y - gunLength;
+                    shotY = this.y - this.gun.range;
                 } else if (this.aim === Infinity) {
-                    shotY = this.y + gunLength;
+                    shotY = this.y + this.gun.range;
                 }
 
                 var shotVector = [{
@@ -64,10 +61,17 @@ module.exports = function(x, y){
                     y: shotY
                 }];
 
-                // console.log(this.aim, shotVector[0], shotVector[1]);
+                var result = Raycast(Matter.Composite.allBodies(engine.world), shotVector[0], shotVector[1]).filter(function(raycol){
+                    return raycol.body.id !== self.matterjs.id;
+                });
 
-                var result = Matter.Query.ray(Matter.Composite.allBodies(engine.world), shotVector[0], shotVector[1]);
-                console.log(result);
+                if(result.length > 0){
+                    shotVector[1] = {
+                        x: result[0].point.x,
+                        y: result[0].point.y,
+                    };
+                }
+
                 return shotVector;
             }
         },

@@ -97,7 +97,7 @@ client.on('open', function(){
                 setTimeout(function(){
                     shotMap[path.id].remove();
                     delete shotMap[path.id];
-                }, 10);
+                }, 20);
             }
         });
     };
