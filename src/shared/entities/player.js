@@ -66,6 +66,24 @@ module.exports = function(x, y){
                 });
 
                 if(result.length > 0){
+                    var forceX, forceY;
+                    if(result[0].point.x > self.x){
+                        forceX = 0.01;
+                    } else if (result[0].point.x < self.x){
+                        forceX = -0.01;
+                    } else {
+                        forceX = 0;
+                    }
+                    if (result[0].point.y > self.y){
+                        forceY = 0.01;
+                    } else if (result[0].point.y < self.y){
+                        forceY = -0.01;
+                    } else {
+                        forceY = 0;
+                    }
+
+                    Matter.Body.applyForce(result[0].body, result[0].point, { x: forceX, y: forceY });
+
                     shotVector[1] = {
                         x: result[0].point.x,
                         y: result[0].point.y,
