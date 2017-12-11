@@ -90,8 +90,12 @@ client.on('open', function(){
     var renderShots = function(){
         shots.forEach(function(shot){
             if(shot){
-                var path = new Paper.Path.Line(new Paper.Point(shot[0].x + offsetX, shot[0].y + offsetY), new Paper.Point(shot[1].x + offsetX, shot[1].y + offsetY));
-                path.strokeColor = 'black';
+                var path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
+                if(shot.hit === true){
+                    path.strokeColor = 'red';
+                }else{
+                    path.strokeColor = 'black';
+                }
                 path.opacity = 0.5;
                 shotMap[path.id] = path;
                 setTimeout(function(){

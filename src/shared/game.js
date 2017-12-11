@@ -139,7 +139,7 @@ module.exports = function(startServer){
         });
 
         // add a bunch of random walls
-        for(var i = 0; i < 200; i += 1){
+        for(var i = 0; i < 20; i += 1){
             var wall = new Wall(Helpers.rand(100, 1000), Helpers.rand(100, 1000), Helpers.rand(20, 380), Helpers.rand(20, 380));
             wallMap[wall.id] = wall;
             Engine.addWall(wall);

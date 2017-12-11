@@ -53,17 +53,21 @@ module.exports = function(x, y){
                     shotY = this.y + this.gun.range;
                 }
 
-                var shotVector = [{
-                    x: this.x,
-                    y: this.y
-                }, {
-                    x: shotX,
-                    y: shotY
-                }];
+                var shotObj = {
+                    start: {
+                        x: this.x,
+                        y: this.y
+                    },
+                    end: {
+                        x: shotX,
+                        y: shotY
+                    },
+                    hit: false
+                };
 
-                var result = Raycast(Matter.Composite.allBodies(engine.world), shotVector[0], shotVector[1]).filter(function(raycol){
-                    return raycol.body.id !== self.matterjs.id;
-                });
+                var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function(body){
+                    return body.id !== self.matterjs.id;
+                }), shotObj.start, shotObj.end);
 
                 if(result.length > 0){
                     var forceX, forceY;
@@ -84,13 +88,14 @@ module.exports = function(x, y){
 
                     Matter.Body.applyForce(result[0].body, result[0].point, { x: forceX, y: forceY });
 
-                    shotVector[1] = {
+                    shotObj.end = {
                         x: result[0].point.x,
                         y: result[0].point.y,
                     };
+                    shotObj.hit = true;
                 }
 
-                return shotVector;
+                return shotObj;
             }
         },
         serialize: function(){
