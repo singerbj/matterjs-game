@@ -1,6 +1,7 @@
 const Player = require('./entities/player');
 const Wall = require('./entities/wall');
 const Helpers = require('./helpers');
+const MapBuilder = require('./mapbuilder');
 const WebSocket = require('ws');
 const Decoder = new TextDecoder("utf-8");
 const Matter = require('matter-js/build/matter.js');
@@ -30,23 +31,25 @@ module.exports = function(startServer){
             c.on('message', function(data) {
                 event = JSON.parse(data);
                 if(event.type === 'onkeydown'){
-                    if(event.key === 'w'){
+                    if(event.key === 'w' || event.key === 'W'){
                         c.player.moving.up = true;
-                    } else if(event.key === 'a'){
+                    } else if(event.key === 'a' || event.key === 'A'){
                         c.player.moving.left = true;
-                    } else if(event.key === 's'){
+                    } else if(event.key === 's' || event.key === 'S'){
                         c.player.moving.down = true;
-                    } else if(event.key === 'd'){
+                    } else if(event.key === 'd' || event.key === 'D'){
                         c.player.moving.right = true;
+                    } else if(event.key === 'r' || event.key === 'R') {
+                        c.player.reloading = true;
                     }
                 } else if(event.type === 'onkeyup'){
-                    if(event.key === 'w'){
+                    if(event.key === 'w' || event.key === 'W'){
                         c.player.moving.up = false;
-                    } else if(event.key === 'a'){
+                    } else if(event.key === 'a' || event.key === 'A'){
                         c.player.moving.left = false;
-                    } else if(event.key === 's'){
+                    } else if(event.key === 's' || event.key === 'S'){
                         c.player.moving.down = false;
-                    } else if(event.key === 'd'){
+                    } else if(event.key === 'd' || event.key === 'D'){
                         c.player.moving.right = false;
                     }
                 } else if(event.type === 'onmousedown'){
@@ -80,17 +83,14 @@ module.exports = function(startServer){
         });
 
         var velocity = {x: 0, y: 0};
-        var Engine = require('./engine')(function(engine){
+        var Engine = require('./engine')(function(engine, fps){
 
             //Add promise to these loops
             var shots = []
             Object.keys(playerMap).forEach(function(id){
-                if(id[0] !== '_'){
                     playerMap[id].x = playerMap[id].matterjs.position.x;
                     playerMap[id].y = playerMap[id].matterjs.position.y;
-
                     shots.push(playerMap[id].handleFiring(engine));
-                }
             });
 
             Object.keys(wallMap).forEach(function(id){
@@ -116,34 +116,54 @@ module.exports = function(startServer){
                 }
                 Matter.Body.setVelocity(clients[id].player.matterjs, velocity);
 
-
                 clients[id].player.x = clients[id].player.matterjs.position.x;
                 clients[id].player.y = clients[id].player.matterjs.position.y;
 
+                // clients[id].send(JSON.stringify({
+                //     playerArray: Helpers.serializeMap(playerMap)
+                // }));
+                // clients[id].send(JSON.stringify({
+                //     wallArray: Helpers.serializeMap(wallMap)
+                // }));
+                // clients[id].send(JSON.stringify({
+                //     toDelete: toDelete
+                // }));
+                // clients[id].send(JSON.stringify({
+                //     player: clients[id].player.serialize()
+                // }));
+                // clients[id].send(JSON.stringify({
+                //     shots: shots
+                // }));
+                // clients[id].send(JSON.stringify({
+                //     fps: fps
+                // }));
+
                 clients[id].send(JSON.stringify({
-                    playerArray: Helpers.serializeMap(playerMap)
-                }));
-                clients[id].send(JSON.stringify({
-                    wallArray: Helpers.serializeMap(wallMap)
-                }));
-                clients[id].send(JSON.stringify({
-                    toDelete: toDelete
-                }));
-                clients[id].send(JSON.stringify({
-                    player: clients[id].player.serialize()
-                }));
-                clients[id].send(JSON.stringify({
-                    shots: shots
+                    playerArray: Helpers.serializeMap(playerMap),
+                    wallArray: Helpers.serializeMap(wallMap),
+                    toDelete: toDelete,
+                    player: clients[id].player.serialize(),
+                    shots: shots,
+                    fps: fps
                 }));
             });
         });
 
-        // add a bunch of random walls
-        for(var i = 0; i < 20; i += 1){
-            var wall = new Wall(Helpers.rand(100, 1000), Helpers.rand(100, 1000), Helpers.rand(20, 380), Helpers.rand(20, 380));
+        var mapBodies = MapBuilder.buildMap(8000, 8000);
+        mapBodies.walls.forEach(function(wall){
             wallMap[wall.id] = wall;
             Engine.addWall(wall);
-        }
+        });
+        // mapBodies.guns.forEach(function(gun){
+        //
+        // });
+
+        // // add a bunch of random walls
+        // for(var i = 0; i < 20; i += 1){
+        //     var wall = new Wall(Helpers.rand(100, 1000), Helpers.rand(100, 1000), Helpers.rand(20, 380), Helpers.rand(20, 380));
+        //     wallMap[wall.id] = wall;
+        //     Engine.addWall(wall);
+        // }
         //
         // for(var i = 0; i < 1; i += 1){
         //     var wall = new Wall(Helpers.rand(0, 40), Helpers.rand(0, 40), Helpers.rand(20, 40), Helpers.rand(20, 40));

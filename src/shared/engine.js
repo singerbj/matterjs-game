@@ -22,10 +22,21 @@ module.exports = function(callback){
         engine.world.gravity.y = 0;
     };
 
+    var lastTimeFps;
+    var fps = -1;
+    var lastFpsDraw = Date.now();
+    var currentTime;
+
     var animate = function (t) {
         raf(animate);
-        callback(engine);
+        callback(engine, fps);
         Matter.Engine.update(engine, 1000 / 60);
+        currentTime = Date.now();
+        if (lastTimeFps && (currentTime - lastFpsDraw) > 500) {
+            lastFpsDraw = currentTime;
+            fps = Math.floor(1000 / (currentTime - lastTimeFps));
+        }
+        lastTimeFps = currentTime;
     };
 
     init();

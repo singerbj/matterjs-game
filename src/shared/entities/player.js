@@ -25,6 +25,9 @@ module.exports = function(x, y){
             y: 0
         },
         firing: false,
+        reloading: false,
+        reloaded: 0,
+        reloadStart: undefined,
         matterjs: body,
         angle: 0,
         aim: 0,
@@ -32,70 +35,68 @@ module.exports = function(x, y){
         handleFiring: function(engine){
             var self = this;
             var time = Date.now();
-            if(this.firing && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)){
-                this.lastShot = time;
+            if(!this.reloading){
+                if(this.firing && this.gun.ammo > 0 && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)){
+                    this.lastShot = time;
+                    this.gun.ammo -= 1;
 
-                var k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
+                    var k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
 
-                var shotX;
-                var shotY;
-                if (this.mouse.x < this.x) {
-                    shotX = this.x - k;
-                    shotY = this.y - (k * this.aim);
-                } else {
-                    shotX = this.x + k;
-                    shotY = this.y + (k * this.aim);
-                }
-
-                if (this.aim === -Infinity) {
-                    shotY = this.y - this.gun.range;
-                } else if (this.aim === Infinity) {
-                    shotY = this.y + this.gun.range;
-                }
-
-                var shotObj = {
-                    start: {
-                        x: this.x,
-                        y: this.y
-                    },
-                    end: {
-                        x: shotX,
-                        y: shotY
-                    },
-                    hit: false
-                };
-
-                var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function(body){
-                    return body.id !== self.matterjs.id;
-                }), shotObj.start, shotObj.end);
-
-                if(result.length > 0){
-                    var forceX, forceY;
-                    if(result[0].point.x > self.x){
-                        forceX = 0.01;
-                    } else if (result[0].point.x < self.x){
-                        forceX = -0.01;
+                    var shotX;
+                    var shotY;
+                    if (this.mouse.x < this.x) {
+                        shotX = this.x - k;
+                        shotY = this.y - (k * this.aim);
                     } else {
-                        forceX = 0;
-                    }
-                    if (result[0].point.y > self.y){
-                        forceY = 0.01;
-                    } else if (result[0].point.y < self.y){
-                        forceY = -0.01;
-                    } else {
-                        forceY = 0;
+                        shotX = this.x + k;
+                        shotY = this.y + (k * this.aim);
                     }
 
-                    Matter.Body.applyForce(result[0].body, result[0].point, { x: forceX, y: forceY });
+                    if (this.aim === -Infinity) {
+                        shotY = this.y - this.gun.range;
+                    } else if (this.aim === Infinity) {
+                        shotY = this.y + this.gun.range;
+                    }
 
-                    shotObj.end = {
-                        x: result[0].point.x,
-                        y: result[0].point.y,
+                    var shotObj = {
+                        start: {
+                            x: this.x,
+                            y: this.y
+                        },
+                        end: {
+                            x: shotX,
+                            y: shotY
+                        },
+                        hit: false
                     };
-                    shotObj.hit = true;
-                }
 
-                return shotObj;
+                    var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function(body){
+                        return body.id !== self.matterjs.id;
+                    }), shotObj.start, shotObj.end);
+
+                    if(result.length > 0){
+                        shotObj.end = {
+                            x: result[0].point.x,
+                            y: result[0].point.y,
+                        };
+                        shotObj.hit = true;
+                    }
+
+                    return shotObj;
+                }
+            }else{
+                if(!this.reloadStart){
+                    this.reloadStart = Date.now();
+                }else{
+                    if(Date.now() > (this.gun.reloadTime + this.reloadStart)){
+                        this.reloadStart = undefined;
+                        this.reloaded = 0;
+                        this.reloading = false;
+                        this.gun.ammo = this.gun.maxAmmo;
+                    }else{
+                        this.reloaded = Math.floor((Date.now() - this.reloadStart) / this.gun.reloadTime * 100);
+                    }
+                }
             }
         },
         serialize: function(){
@@ -105,7 +106,9 @@ module.exports = function(x, y){
                 x: this.x,
                 y: this.y,
                 r: this.r * 2,
-                a: this.angle
+                a: this.angle,
+                g: this.gun,
+                re: this.reloaded
             }
         }
     };

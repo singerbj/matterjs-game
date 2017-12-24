@@ -12,8 +12,38 @@ var playerArray = [];
 var wallArray = [];
 var toDelete = [];
 var shots = [];
+var fps = -1;
 var player, decodedDataList, parsedData, mouseX = 0, mouseY = 0;
 var canvas = document.querySelector('#canvas');
+var canvasWidth = 1920;
+var canvasHeight = 1080;
+
+var marginLeft = 0;
+var marginTop = 0;
+var fpsText, ammoText, healthText;
+var centerCanvas = function(){
+    lastResize = Date.now();
+    marginLeft = ((canvasWidth - window.innerWidth) / 2);
+    marginTop = ((canvasHeight - window.innerHeight) / 2);
+    canvas.style.marginLeft = -marginLeft + 'px';
+    canvas.style.marginTop = -marginTop + 'px';
+};
+centerCanvas();
+window.onresize = function(){
+    if(fpsText){
+        fpsText.remove();
+        fpsText = undefined;
+    }
+    if(ammoText){
+        ammoText.remove();
+        ammoText = undefined;
+    }
+    if(healthText){
+        healthText.remove();
+        healthText = undefined;
+    }
+    centerCanvas();
+};
 
 const client = new WebSocket('ws://127.0.0.1:6574');
 client.on('open', function(){
@@ -23,14 +53,21 @@ client.on('open', function(){
         parsedData = JSON.parse(data);
         if(parsedData.playerArray){
             playerArray = parsedData.playerArray;
-        }else if(parsedData.wallArray){
+        }
+        if(parsedData.wallArray){
             wallArray = parsedData.wallArray;
-        }else if(parsedData.toDelete){
+        }
+        if(parsedData.toDelete){
             toDelete = parsedData.toDelete;
-        }else if(parsedData.player){
+        }
+        if(parsedData.player){
             player = parsedData.player;
-        }else if(parsedData.shots){
+        }
+        if(parsedData.shots){
             shots = parsedData.shots;
+        }
+        if(parsedData.fps){
+            fps = parsedData.fps;
         }
     });
 
@@ -96,23 +133,51 @@ client.on('open', function(){
                 }else{
                     path.strokeColor = 'black';
                 }
-                path.opacity = 0.5;
+                path.opacity = 0.4;
                 shotMap[path.id] = path;
                 setTimeout(function(){
                     shotMap[path.id].remove();
                     delete shotMap[path.id];
-                }, 20);
+                }, 10);
             }
         });
     };
 
+    var renderFps = function(clientFps){
+        if(!fpsText){
+            fpsText = new Paper.PointText(new Point(marginLeft, marginTop + 10));
+            fpsText.fillColor = 'black';
+        } else {
+            fpsText.content = 'Server: ' + fps.toString() + ' - Client: ' + clientFps;
+        }
+    };
+
+    var renderHud = function(){
+        if(!ammoText){
+            ammoText = new Paper.PointText(new Point(marginLeft,  (canvas.height / 2) - marginTop - 20));
+            ammoText.fillColor = 'black';
+        }
+        // if(!healthText){
+        //     healthText.remove();
+        // }
+        if(player && player.g){
+            ammoText.content = 'Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re;
+        }
+    };
+
     Paper.install(window);
     Paper.setup(canvas);
+
+    var clientLastTimeFps;
+    var clientFps = -1;
+    var clientLastFpsDraw = Date.now();
+    var currentTime;
     view.onFrame = function(){
         deleteObjects(toDelete);
         renderObjects(playerArray);
         renderObjects(wallArray);
         renderShots();
+        renderHud();
 
         if(player){
             client.send(JSON.stringify({
@@ -121,6 +186,14 @@ client.on('open', function(){
                 y: mouseY - (canvas.height / 4)
             }));
         }
+
+        currentTime = Date.now();
+        if (clientLastTimeFps && (currentTime - clientLastFpsDraw) > 500) {
+            clientLastFpsDraw = currentTime;
+            clientFps = Math.floor(1000 / (currentTime - clientLastTimeFps));
+        }
+        clientLastTimeFps = currentTime;
+        renderFps(clientFps);
     }
 
     window.Paper = Paper;
