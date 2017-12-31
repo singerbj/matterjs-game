@@ -183,14 +183,16 @@ client.on('open', function(){
 
     var renderHud = function(){
         if(!ammoText){
-            ammoText = new Paper.PointText(new Point(marginLeft,  (canvas.height / 2) - marginTop - 20));
+            ammoText = new Paper.PointText(new Point(marginLeft,  (canvas.height / 2) - marginTop - 40));
             ammoText.fillColor = 'black';
         }
-        // if(!healthText){
-        //     healthText.remove();
-        // }
+        if(!healthText){
+            healthText = new Paper.PointText(new Point(marginLeft,  (canvas.height / 2) - marginTop - 20));
+            healthText.fillColor = 'black';
+        }
         if(player && player.g){
-            ammoText.content = 'Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re;
+            ammoText.content = 'Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
+            healthText.content = Math.ceil(player.h / 10) + '% HP'
         }
     };
 
@@ -212,7 +214,6 @@ client.on('open', function(){
         renderObjects(playerArray);
         renderObjects(wallArray);
         renderShots();
-        renderHud();
         handleReloads();
 
         if(player){
@@ -229,6 +230,7 @@ client.on('open', function(){
             clientFps = Math.floor(1000 / (currentTime - clientLastTimeFps));
         }
         clientLastTimeFps = currentTime;
+        renderHud();
         renderFps(clientFps);
     }
 

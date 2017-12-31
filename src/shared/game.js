@@ -88,11 +88,24 @@ module.exports = function(startServer){
         var Engine = require('./engine')(function(engine, fps){
 
             //Add promise to these loops
-            var shots = [];
+            var shots = [], shot, hitEntity;
             Object.keys(playerMap).forEach(function(id){
-                    playerMap[id].x = playerMap[id].matterjs.position.x;
-                    playerMap[id].y = playerMap[id].matterjs.position.y;
-                    shots.push(playerMap[id].handleFiring(engine));
+                playerMap[id].x = playerMap[id].matterjs.position.x;
+                playerMap[id].y = playerMap[id].matterjs.position.y;
+                shot = playerMap[id].handleFiring(engine);
+                if(shot){
+                    if(shot.hitEntityId){
+                        if(playerMap[shot.hitEntityId]){
+                            hitEntity = playerMap[shot.hitEntityId];
+                        }else if(wallMap[shot.hitEntityId]){
+                            hitEntity = wallMap[shot.hitEntityId];
+                        }
+                        if(hitEntity && hitEntity.handleHit){
+                            hitEntity.handleHit(shot);
+                        }
+                    }
+                    shots.push(shot);
+                }
             });
 
             Object.keys(wallMap).forEach(function(id){

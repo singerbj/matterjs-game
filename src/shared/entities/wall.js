@@ -7,8 +7,10 @@ module.exports = function(x, y, w, h){
     var body = Matter.Bodies.rectangle(adjustedX, adjustedY, w, h);
     Matter.Body.setInertia(body, Infinity);
     Matter.Body.setStatic(body, true);
+    var entityId = Helpers.getUUID();
+    body.entityId = entityId;
     return {
-        id: Helpers.getUUID(),
+        id: entityId,
         type: 'w',
         x: adjustedX,
         y: adjustedY,

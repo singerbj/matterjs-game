@@ -7,12 +7,15 @@ module.exports = function(x, y){
     var r = 8;
     var body = Matter.Bodies.circle(x, y, r*2, r*2);
     Matter.Body.setInertia(body, Infinity);
+    var entityId = Helpers.getUUID();
+    body.entityId = entityId;
     return {
-        id: Helpers.getUUID(),
+        id: entityId,
         type: 'p',
         x: x,
         y: y,
         r: r,
+        health: 1000,
         speed: 1.2,
         moving: {
             up: false,
@@ -69,7 +72,8 @@ module.exports = function(x, y){
                             y: shotY
                         },
                         hit: false,
-                        time: Date.now()
+                        time: Date.now(),
+                        damage: this.gun.damage
                     };
 
                     var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function(body){
@@ -82,6 +86,8 @@ module.exports = function(x, y){
                             y: result[0].point.y,
                         };
                         shotObj.hit = true;
+                        shotObj.hitEntityId = result[0].body.entityId;
+                        shotObj.shooterEntityId = result[0].body.entityId;
                     }
 
                     return shotObj;
@@ -101,6 +107,9 @@ module.exports = function(x, y){
                 }
             }
         },
+        handleHit: function(shot){
+            this.health -= shot.damage;
+        },
         serialize: function(){
             return {
                 i: this.id,
@@ -110,7 +119,8 @@ module.exports = function(x, y){
                 r: this.r * 2,
                 a: this.angle,
                 g: this.gun,
-                re: this.reloaded
+                re: this.reloaded,
+                h: this.health
             }
         }
     };
