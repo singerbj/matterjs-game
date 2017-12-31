@@ -14,6 +14,7 @@ module.exports = function(startServer){
     var clientPlayerMap = {};
     var clientWallMap = {};
     var clients = {};
+    var reloads = [];
 
     if(startServer){ //if we are the server
         var server = new WebSocket.Server({ port: 6574 });
@@ -39,8 +40,9 @@ module.exports = function(startServer){
                         c.player.moving.down = true;
                     } else if(event.key === 'd' || event.key === 'D'){
                         c.player.moving.right = true;
-                    } else if(event.key === 'r' || event.key === 'R') {
+                    } else if((event.key === 'r' || event.key === 'R') && c.player.gun.ammo < c.player.gun.maxAmmo) {
                         c.player.reloading = true;
+                        reloads.push({x: c.player.x, y: c.player.y});
                     }
                 } else if(event.type === 'onkeyup'){
                     if(event.key === 'w' || event.key === 'W'){
@@ -86,7 +88,7 @@ module.exports = function(startServer){
         var Engine = require('./engine')(function(engine, fps){
 
             //Add promise to these loops
-            var shots = []
+            var shots = [];
             Object.keys(playerMap).forEach(function(id){
                     playerMap[id].x = playerMap[id].matterjs.position.x;
                     playerMap[id].y = playerMap[id].matterjs.position.y;
@@ -144,12 +146,14 @@ module.exports = function(startServer){
                     toDelete: toDelete,
                     player: clients[id].player.serialize(),
                     shots: shots,
-                    fps: fps
+                    fps: fps,
+                    reloads: reloads
                 }));
+                reloads = [];
             });
         });
 
-        var mapBodies = MapBuilder.buildMap(8000, 8000);
+        var mapBodies = MapBuilder.buildMap(4000, 4000);
         mapBodies.walls.forEach(function(wall){
             wallMap[wall.id] = wall;
             Engine.addWall(wall);

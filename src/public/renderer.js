@@ -3,6 +3,15 @@ const Matter = require('matter-js/build/matter.js');
 const raf = require('raf');
 const Decoder = new TextDecoder("utf-8");
 const Paper = require('paper');
+const Howler = require('howler'); //require('node_modules/howler/dist/howler.min.js');
+
+//Load sounds
+var gunShotSound = new Howl({
+  src: ['../audio/gunshot.wav']
+});
+var reloadSound = new Howl({
+  src: ['../audio/reload.mp3']
+});
 
 require('../shared/game.js')(confirm("Start the server?"));
 
@@ -12,6 +21,7 @@ var playerArray = [];
 var wallArray = [];
 var toDelete = [];
 var shots = [];
+var reloads = [];
 var fps = -1;
 var player, decodedDataList, parsedData, mouseX = 0, mouseY = 0;
 var canvas = document.querySelector('#canvas');
@@ -68,6 +78,9 @@ client.on('open', function(){
         }
         if(parsedData.fps){
             fps = parsedData.fps;
+        }
+        if(parsedData.reloads){
+            reloads = parsedData.reloads;
         }
     });
 
@@ -127,20 +140,36 @@ client.on('open', function(){
     var renderShots = function(){
         shots.forEach(function(shot){
             if(shot){
-                var path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
-                if(shot.hit === true){
-                    path.strokeColor = 'red';
+                gunShotSound.play();
+                shotMap[shot.id] = shot;
+                shotMap[shot.id].path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
+                shotMap[shot.id].path.strokeWidth = 1.5;
+                shotMap[shot.id].path.opacity = 0.4;
+                if(shotMap[shot.id].hit === true){
+                    shotMap[shot.id].path.strokeColor = 'red';
                 }else{
-                    path.strokeColor = 'black';
+                    shotMap[shot.id].path.strokeColor = 'black';
                 }
-                path.opacity = 0.4;
-                shotMap[path.id] = path;
-                setTimeout(function(){
-                    shotMap[path.id].remove();
-                    delete shotMap[path.id];
-                }, 10);
             }
         });
+        var shot, previousOpacity;
+        Object.keys(shotMap).forEach(function(key){
+            previousOpacity = shotMap[key].path.opacity;
+            shotMap[key].path.remove();
+            if(previousOpacity > 0.01){
+                shotMap[key].path = new Paper.Path.Line(new Paper.Point(shotMap[key].start.x + offsetX, shotMap[key].start.y + offsetY), new Paper.Point(shotMap[key].end.x + offsetX, shotMap[key].end.y + offsetY));
+                shotMap[key].path.strokeWidth = 1.5;
+                if(shotMap[key] && shotMap[key].hit === true){
+                    shotMap[key].path.strokeColor = 'red';
+                }else{
+                    shotMap[key].path.strokeColor = 'black';
+                }
+                shotMap[key].path.opacity = previousOpacity - 0.01;
+            }else{
+                delete shotMap[key];
+            }
+        });
+
     };
 
     var renderFps = function(clientFps){
@@ -165,6 +194,12 @@ client.on('open', function(){
         }
     };
 
+    var handleReloads = function(){
+        reloads.forEach(function(){
+            reloadSound.play();
+        });
+    };
+
     Paper.install(window);
     Paper.setup(canvas);
 
@@ -178,6 +213,7 @@ client.on('open', function(){
         renderObjects(wallArray);
         renderShots();
         renderHud();
+        handleReloads();
 
         if(player){
             client.send(JSON.stringify({

@@ -59,6 +59,7 @@ module.exports = function(x, y){
                     }
 
                     var shotObj = {
+                        id: Helpers.getUUID(),
                         start: {
                             x: this.x,
                             y: this.y
@@ -67,7 +68,8 @@ module.exports = function(x, y){
                             x: shotX,
                             y: shotY
                         },
-                        hit: false
+                        hit: false,
+                        time: Date.now()
                     };
 
                     var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function(body){
