@@ -32,6 +32,7 @@ module.exports = function(startServer){
             c.on('message', function(data) {
                 event = JSON.parse(data);
                 if(event.type === 'onkeydown'){
+                    Matter.Sleeping.set(c.player.matterjs, false);
                     if(event.key === 'w' || event.key === 'W'){
                         c.player.moving.up = true;
                     } else if(event.key === 'a' || event.key === 'A'){

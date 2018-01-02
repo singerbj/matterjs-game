@@ -18,6 +18,7 @@ module.exports = function(callback){
 
         Matter.Engine.run(engine);
         // Matter.Render.run(render);
+        engine.enableSleeping = true;
         engine.world.gravity.x = 0;
         engine.world.gravity.y = 0;
     };

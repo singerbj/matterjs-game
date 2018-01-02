@@ -1,3 +1,5 @@
+const remote = require('electron').remote;
+
 module.exports = function(sendEvent){
     window.onmousedown = function(event){
         sendEvent({
@@ -12,10 +14,18 @@ module.exports = function(sendEvent){
         });
     };
     window.onkeydown = function(event){
-        sendEvent({
-            type: 'onkeydown',
-            key: event.key
-        });
+        console.log(event.key);
+        if(event.key === 'Escape'){
+            var window = remote.getCurrentWindow();
+            window.close();
+        }else if(event.key === 'F11'){
+            event.preventDefault();
+        }else{
+            sendEvent({
+                type: 'onkeydown',
+                key: event.key
+            });
+        }
     };
     window.onkeyup = function(event){
         sendEvent({

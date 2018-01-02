@@ -15,7 +15,8 @@ let mainWindow;
 // Some APIs can only be used after this event occurs.
 app.on('ready', function () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600});
+  mainWindow = new BrowserWindow({width: 800, height: 600, fullscreen: true, frame: false});
+  mainWindow.maximize();
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({

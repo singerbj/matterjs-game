@@ -97,8 +97,8 @@ client.on('open', function(){
     var engine, render, entity, offsetX, offsetY;
     var renderObjects = function(entityMap){
         if(player){
-            offsetX = (canvas.width / 4) - player.x;
-            offsetY = (canvas.height / 4) - player.y;
+            offsetX = (canvas.width / 2) - player.x;
+            offsetY = (canvas.height / 2) - player.y;
 
             entityMap.forEach(function(entity){
                 if(!(entity instanceof Array)){
@@ -143,27 +143,30 @@ client.on('open', function(){
                 gunShotSound.play();
                 shotMap[shot.id] = shot;
                 shotMap[shot.id].path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
+                shotMap[shot.id].path.sendToBack();
                 shotMap[shot.id].path.strokeWidth = 1.5;
-                shotMap[shot.id].path.opacity = 0.4;
-                if(shotMap[shot.id].hit === true){
-                    shotMap[shot.id].path.strokeColor = 'red';
-                }else{
-                    shotMap[shot.id].path.strokeColor = 'black';
-                }
+                shotMap[shot.id].path.opacity = 0.2;
+                // if(shotMap[shot.id].hit === true){
+                //     shotMap[shot.id].path.strokeColor = 'red';
+                // }else{
+                shotMap[shot.id].path.strokeColor = 'black';
+                // }
             }
         });
-        var shot, previousOpacity;
+        var shot, previousOpacity, previousStrokeWidth;
         Object.keys(shotMap).forEach(function(key){
             previousOpacity = shotMap[key].path.opacity;
+            previousStrokeWidth = shotMap[key].path.strokeWidth;
             shotMap[key].path.remove();
             if(previousOpacity > 0.01){
                 shotMap[key].path = new Paper.Path.Line(new Paper.Point(shotMap[key].start.x + offsetX, shotMap[key].start.y + offsetY), new Paper.Point(shotMap[key].end.x + offsetX, shotMap[key].end.y + offsetY));
-                shotMap[key].path.strokeWidth = 1.5;
-                if(shotMap[key] && shotMap[key].hit === true){
-                    shotMap[key].path.strokeColor = 'red';
-                }else{
-                    shotMap[key].path.strokeColor = 'black';
-                }
+                shotMap[key].path.sendToBack();
+                shotMap[key].path.strokeWidth = previousStrokeWidth + 0.2;
+                // if(shotMap[key] && shotMap[key].hit === true){
+                //     shotMap[key].path.strokeColor = 'red';
+                // }else{
+                shotMap[key].path.strokeColor = 'black';
+                // }
                 shotMap[key].path.opacity = previousOpacity - 0.01;
             }else{
                 delete shotMap[key];
@@ -174,25 +177,28 @@ client.on('open', function(){
 
     var renderFps = function(clientFps){
         if(!fpsText){
-            fpsText = new Paper.PointText(new Point(marginLeft, marginTop + 10));
+            fpsText = new Paper.PointText(new Point(marginLeft + 5, marginTop + 20));
             fpsText.fillColor = 'black';
         } else {
             fpsText.content = 'Server: ' + fps.toString() + ' - Client: ' + clientFps;
+            fpsText.bringToFront();
         }
     };
 
     var renderHud = function(){
         if(!ammoText){
-            ammoText = new Paper.PointText(new Point(marginLeft,  (canvas.height / 2) - marginTop - 40));
+            ammoText = new Paper.PointText(new Point(marginLeft + 5,  (canvas.height) - marginTop - 40));
             ammoText.fillColor = 'black';
         }
         if(!healthText){
-            healthText = new Paper.PointText(new Point(marginLeft,  (canvas.height / 2) - marginTop - 20));
+            healthText = new Paper.PointText(new Point(marginLeft + 5,  (canvas.height) - marginTop - 20));
             healthText.fillColor = 'black';
         }
         if(player && player.g){
             ammoText.content = 'Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
             healthText.content = Math.ceil(player.h / 10) + '% HP'
+            ammoText.bringToFront();
+            healthText.bringToFront();
         }
     };
 
@@ -219,8 +225,8 @@ client.on('open', function(){
         if(player){
             client.send(JSON.stringify({
                 type: 'mouse',
-                x: mouseX - (canvas.width / 4),
-                y: mouseY - (canvas.height / 4)
+                x: mouseX - (canvas.width / 2),
+                y: mouseY - (canvas.height / 2)
             }));
         }
 
