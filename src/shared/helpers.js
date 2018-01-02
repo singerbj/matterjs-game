@@ -1,21 +1,25 @@
 const uuidv4 = require('uuid/v4');
 
 module.exports = {
-    getUUID: function(){
+    getUUID: function () {
         return uuidv4();
     },
-    serializeMap: function(obj){
-        return Object.keys(obj).map(function(id){
-            if(id[0] !== '_'){
+    serializeMap: function (obj) {
+        return Object.keys(obj).map(function (id) {
+            if (id[0] !== '_') {
                 return obj[id].serialize();
-            }else{
+            } else {
                 return obj[id];
             }
         });
     },
     rand: function (min, max) {
-            return Math.floor(Math.random() * (max - min)) + min;
+        return Math.floor(Math.random() * (max - min)) + min;
     },
+    collisionFilters: {
+        normal: 0x0001,
+        overlap: 0x0002
+    }
     // lineIntersect: function (a,b) {
     //     var am = (a[0].y - a[1].y) / (a[0].x - a[1].x);  // slope of line 1
     //     var bm = (b[0].y - b[1].y) / (b[0].x - b[1].x);  // slope of line 2

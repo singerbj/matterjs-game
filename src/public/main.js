@@ -15,7 +15,12 @@ let mainWindow;
 // Some APIs can only be used after this event occurs.
 app.on('ready', function () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600, fullscreen: true, frame: false});
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    fullscreen: true,
+    frame: false
+  });
   mainWindow.maximize();
 
   // and load the index.html of the app.
@@ -23,7 +28,7 @@ app.on('ready', function () {
     pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
     slashes: true
-}));
+  }));
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
@@ -34,7 +39,7 @@ app.on('ready', function () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
-});
+  });
 });
 
 // Quit when all windows are closed.

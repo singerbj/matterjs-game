@@ -1,11 +1,15 @@
 const Matter = require('matter-js/build/matter.js');
 const Helpers = require('../helpers');
-const Gun = require('./gun');
+const Gun = require('./items/guns/gun');
 const Raycast = require('../raycast');
 
-module.exports = function(x, y){
+module.exports = function (x, y) {
     var r = 8;
-    var body = Matter.Bodies.circle(x, y, r*2, r*2);
+    var body = Matter.Bodies.circle(x, y, r * 2, {
+        collisionFilter: {
+            mask: Helpers.collisionFilters.normal
+        }
+    });
     Matter.Body.setInertia(body, Infinity);
     var entityId = Helpers.getUUID();
     body.entityId = entityId;
@@ -23,7 +27,7 @@ module.exports = function(x, y){
             left: false,
             right: false
         },
-        mouse:{
+        mouse: {
             x: 0,
             y: 0
         },
@@ -35,11 +39,11 @@ module.exports = function(x, y){
         angle: 0,
         aim: 0,
         gun: new Gun(),
-        handleFiring: function(engine){
+        handleFiring: function (engine) {
             var self = this;
             var time = Date.now();
-            if(!this.reloading){
-                if(this.firing && this.gun.ammo > 0 && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)){
+            if (!this.reloading) {
+                if (this.firing && this.gun.ammo > 0 && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)) {
                     this.lastShot = time;
                     this.gun.ammo -= 1;
 
@@ -76,11 +80,11 @@ module.exports = function(x, y){
                         damage: this.gun.damage
                     };
 
-                    var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function(body){
-                        return body.id !== self.matterjs.id;
+                    var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function (body) {
+                        return body.id !== self.matterjs.id && body.collisionFilter.mask === 0x0001;
                     }), shotObj.start, shotObj.end);
 
-                    if(result.length > 0){
+                    if (result.length > 0) {
                         shotObj.end = {
                             x: result[0].point.x,
                             y: result[0].point.y,
@@ -92,25 +96,25 @@ module.exports = function(x, y){
 
                     return shotObj;
                 }
-            }else{
-                if(!this.reloadStart){
+            } else {
+                if (!this.reloadStart) {
                     this.reloadStart = Date.now();
-                }else{
-                    if(Date.now() > (this.gun.reloadTime + this.reloadStart)){
+                } else {
+                    if (Date.now() > (this.gun.reloadTime + this.reloadStart)) {
                         this.reloadStart = undefined;
                         this.reloaded = 0;
                         this.reloading = false;
                         this.gun.ammo = this.gun.maxAmmo;
-                    }else{
+                    } else {
                         this.reloaded = Math.floor((Date.now() - this.reloadStart) / this.gun.reloadTime * 100);
                     }
                 }
             }
         },
-        handleHit: function(shot){
+        handleHit: function (shot) {
             this.health -= shot.damage;
         },
-        serialize: function(){
+        serialize: function () {
             return {
                 i: this.id,
                 t: this.type,
@@ -118,7 +122,7 @@ module.exports = function(x, y){
                 y: this.y,
                 r: this.r * 2,
                 a: this.angle,
-                g: this.gun,
+                g: this.gun.serialize(),
                 re: this.reloaded,
                 h: this.health
             }

@@ -1,10 +1,14 @@
 const Matter = require('matter-js/build/matter.js');
 const Helpers = require('../helpers');
 
-module.exports = function(x, y, w, h){
-    var adjustedX = x + (w/2);
-    var adjustedY = y + (h/2);
-    var body = Matter.Bodies.rectangle(adjustedX, adjustedY, w, h);
+module.exports = function (x, y, w, h) {
+    var adjustedX = x + (w / 2);
+    var adjustedY = y + (h / 2);
+    var body = Matter.Bodies.rectangle(adjustedX, adjustedY, w, h, {
+        collisionFilter: {
+            mask: Helpers.collisionFilters.normal
+        }
+    });
     Matter.Body.setInertia(body, Infinity);
     Matter.Body.setStatic(body, true);
     var entityId = Helpers.getUUID();
@@ -18,7 +22,7 @@ module.exports = function(x, y, w, h){
         h: h,
         angle: body.angle,
         matterjs: body,
-        serialize: function(){
+        serialize: function () {
             return {
                 i: this.id,
                 t: this.type,

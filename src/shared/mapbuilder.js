@@ -2,11 +2,15 @@ const Tiles = require('./tiles');
 const Wall = require('./entities/wall');
 const Helpers = require('./helpers');
 
+var possibleItems = [
+    require('./entities/items/guns/gun')
+];
+
 module.exports = {
     tileSize: 500,
     wallWidth: 10,
-    buildMap: function(mapWidth, mapHeight){
-        if(mapWidth % this.tileSize !== 0 || mapHeight % this.tileSize !== 0){
+    buildMap: function (mapWidth, mapHeight) {
+        if (mapWidth % this.tileSize !== 0 || mapHeight % this.tileSize !== 0) {
             console.warn('WARNING: Map size doesn\'t perfectly match tile size of ' + this.tileSize + '...');
         }
 
@@ -14,7 +18,7 @@ module.exports = {
 
         var bodies = {
             walls: [],
-            guns: []
+            items: []
         };
 
         var topLeft = {
@@ -52,11 +56,12 @@ module.exports = {
                 y = (j * this.tileSize) - (mapWidth / 2);
 
                 randomTile = possibleTiles[Helpers.rand(0, possibleTiles.length)];
-                generatedTile = Tiles.offsetAndCreate(randomTile, x, y);
+                generatedTile = Tiles.offsetAndCreate(randomTile, x, y, possibleItems);
                 bodies.walls = bodies.walls.concat(generatedTile.walls);
-                bodies.guns = bodies.walls.concat(generatedTile.guns);
+                bodies.items = bodies.items.concat(generatedTile.items);
             }
         }
+
         return bodies;
     }
 }
