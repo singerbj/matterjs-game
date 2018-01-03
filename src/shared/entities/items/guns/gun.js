@@ -8,16 +8,18 @@ module.exports = function (x, y) {
     var adjustedY = y + (height / 2);
     var body = Matter.Bodies.rectangle(adjustedX, adjustedY, width, height, {
         collisionFilter: {
-            mask: Helpers.collisionFilters.overlap
+            mask: Helpers.collisionFilters.normal
         }
     });
     Matter.Body.setInertia(body, Infinity);
     Matter.Body.setStatic(body, true);
     var entityId = Helpers.getUUID();
+    var type = 'g';
     body.entityId = entityId;
+    body.type = type;
     return {
         id: entityId,
-        type: 'g',
+        type: type,
         x: adjustedX,
         y: adjustedY,
         w: width,

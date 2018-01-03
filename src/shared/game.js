@@ -43,7 +43,7 @@ module.exports = function (startServer) {
                             c.player.moving.down = (event.keys[key] === 'onkeydown');
                         } else if (key === 'D') {
                             c.player.moving.right = (event.keys[key] === 'onkeydown');
-                        } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
+                        } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
                             c.player.reloading = true;
                             reloads.push({
                                 x: c.player.x,
@@ -159,7 +159,7 @@ module.exports = function (startServer) {
             });
         });
 
-        var mapBodies = MapBuilder.buildMap(4000, 4000);
+        var mapBodies = MapBuilder.buildMap(1000, 1000);
         mapBodies.walls.forEach(function (wall) {
             wallMap[wall.id] = wall;
             Engine.addWall(wall);

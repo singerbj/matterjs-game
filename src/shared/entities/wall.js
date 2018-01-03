@@ -12,10 +12,12 @@ module.exports = function (x, y, w, h) {
     Matter.Body.setInertia(body, Infinity);
     Matter.Body.setStatic(body, true);
     var entityId = Helpers.getUUID();
+    var type = 'w';
     body.entityId = entityId;
+    body.type = type;
     return {
         id: entityId,
-        type: 'w',
+        type: type,
         x: adjustedX,
         y: adjustedY,
         w: w,

@@ -1,6 +1,7 @@
 var Matter = require('matter-js/build/matter.js');
 const raf = require('raf');
 const Player = require('./entities/player');
+const Helpers = require('./helpers');
 
 module.exports = function (callback) {
     var engine, render;
@@ -21,6 +22,14 @@ module.exports = function (callback) {
         engine.enableSleeping = true;
         engine.world.gravity.x = 0;
         engine.world.gravity.y = 0;
+
+        Matter.Events.on(engine, "collisionStart", function(event){
+            event.pairs.forEach(function(pair){
+                if(pair.bodyA.type === 'g'|| pair.bodyB.type === 'g'){
+                    pair.isActive = false;
+                }
+            });
+        });
     };
 
     var lastTimeFps;
