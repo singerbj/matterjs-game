@@ -49,11 +49,12 @@ module.exports = function (x, y) {
                     this.lastShot = time;
                     this.gun.ammo -= 1;
 
+                    this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
+
                     var k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
 
                     var shotX;
                     var shotY;
-
                     if ((playerX + this.mouse.x) < playerX) {
                         shotX = playerX - k;
                         shotY = playerY - (k * this.aim);
@@ -61,6 +62,7 @@ module.exports = function (x, y) {
                         shotX = playerX + k;
                         shotY = playerY + (k * this.aim);
                     }
+
                     if (this.aim === -Infinity) {
                         shotY = playerY - this.gun.range;
                     } else if (this.aim === Infinity) {

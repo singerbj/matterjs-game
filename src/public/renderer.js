@@ -178,7 +178,7 @@ client.on('open', function () {
             if (previousOpacity > 0.01) {
                 shotMap[key].path = new Paper.Path.Line(new Paper.Point(shotMap[key].start.x + offsetX, shotMap[key].start.y + offsetY), new Paper.Point(shotMap[key].end.x + offsetX, shotMap[key].end.y + offsetY));
                 shotMap[key].path.sendToBack();
-                shotMap[key].path.strokeWidth = previousStrokeWidth + 0.2;
+                shotMap[key].path.strokeWidth = previousStrokeWidth + 0.1;
                 shotMap[key].path.strokeColor = 'black';
                 shotMap[key].path.opacity = previousOpacity - 0.01;
             } else {
