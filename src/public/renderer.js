@@ -111,27 +111,31 @@ client.on('open', function () {
 
             entityMap.forEach(function (entity) {
                 if (!(entity instanceof Array)) {
-                    if (!bodyMap[entity.i]) {
-                        var body;
-                        if (entity.t === 'w') {
-                            body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
-                            body.fillColor = 'green';
-                        } else if (entity.t === 'p') {
-                            body = new Paper.Path.Circle(entity.x + offsetX, entity.y + offsetY, entity.r);
-                            body.fillColor = 'blue';
-                        } else if (entity.t === 'g') {
-                            body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
-                            body.fillColor = 'orange';
-                            body.sendToBack();
+                    if(entity.deleted !== true){
+                        if (!bodyMap[entity.i]) {
+                            var body;
+                            if (entity.t === 'w') {
+                                body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                                body.fillColor = 'green';
+                            } else if (entity.t === 'p') {
+                                body = new Paper.Path.Circle(entity.x + offsetX, entity.y + offsetY, entity.r);
+                                body.fillColor = 'blue';
+                            } else if (entity.t === 'g') {
+                                body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                                body.fillColor = 'orange';
+                                body.sendToBack();
+                            }
+                            body.applyMatrix = false;
+                            bodyMap[entity.i] = body;
+                        } else {
+                            bodyMap[entity.i].position = new Point(entity.x + offsetX, entity.y + offsetY);
                         }
-                        body.applyMatrix = false;
-                        bodyMap[entity.i] = body;
-                    } else {
-                        bodyMap[entity.i].position = new Point(entity.x + offsetX, entity.y + offsetY);
-                    }
 
-                    if (entity.a) {
-                        bodyMap[entity.i].rotate((entity.a * 180 / Math.PI) - (bodyMap[entity.i].rotation));
+                        if (entity.a) {
+                            bodyMap[entity.i].rotate((entity.a * 180 / Math.PI) - (bodyMap[entity.i].rotation));
+                        }
+                    }else{
+                        bodyMap[entity.i].remove();
                     }
                 }
             });

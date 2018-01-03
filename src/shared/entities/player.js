@@ -15,7 +15,7 @@ module.exports = function (x, y) {
     var type = 'p';
     body.entityId = entityId;
     body.type = type;
-    return {
+    var entity = {
         id: entityId,
         type: type,
         x: x,
@@ -41,7 +41,8 @@ module.exports = function (x, y) {
         angle: 0,
         aim: 0,
         gun: undefined,
-        inventory: [],
+        inventory: {},
+        ground: {},
         handleFiring: function (engine) {
             var self = this;
             var time = Date.now();
@@ -89,7 +90,7 @@ module.exports = function (x, y) {
                         };
 
                         var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function (body) {
-                            return body.id !== self.matterjs.id && body.collisionFilter.mask === 0x0001;
+                            return body.id !== self.matterjs.id && body.entity.type !== 'g';
                         }), shotObj.start, shotObj.end);
 
                         if (result.length > 0) {
@@ -123,6 +124,19 @@ module.exports = function (x, y) {
         handleHit: function (shot) {
             this.health -= shot.damage;
         },
+        handlePickup: function(Engine, itemMap, toDelete){
+            var self = this;
+            Object.keys(this.ground).forEach(function(key){
+                itemMap[key].deleted = true;
+                self.inventory[key] = self.ground[key];
+                delete self.ground[key];
+                if(!self.gun && self.inventory[key].type === 'g'){
+                    self.gun = self.inventory[key];
+                }
+            });
+
+
+        },
         serialize: function () {
             return {
                 i: this.id,
@@ -133,8 +147,12 @@ module.exports = function (x, y) {
                 a: this.angle,
                 g: this.gun ? this.gun.serialize() : undefined,
                 re: this.reloaded,
-                h: this.health
+                h: this.health,
+                in: Helpers.serializeMap(this.inventory),
+                gr: Helpers.serializeMap(this.ground)
             }
         }
     };
+    body.entity = entity;
+    return entity;
 };

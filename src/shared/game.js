@@ -43,6 +43,8 @@ module.exports = function (startServer) {
                             c.player.moving.down = (event.keys[key] === 'onkeydown');
                         } else if (key === 'D') {
                             c.player.moving.right = (event.keys[key] === 'onkeydown');
+                        } else if (key === 'F' && event.keys[key] === 'onkeydown') {
+                            c.player.handlePickup(Engine, itemMap, toDelete);
                         } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
                             c.player.reloading = true;
                             reloads.push({
@@ -118,8 +120,14 @@ module.exports = function (startServer) {
             });
 
             Object.keys(itemMap).forEach(function (id) {
-                itemMap[id].x = itemMap[id].matterjs.position.x;
-                itemMap[id].y = itemMap[id].matterjs.position.y;
+                if(!itemMap[id].deleted){
+                    itemMap[id].x = itemMap[id].matterjs.position.x;
+                    itemMap[id].y = itemMap[id].matterjs.position.y;
+                }else{
+                    Engine.removeItem(itemMap[id]);
+                    delete itemMap[id];
+                    toDelete.push(id);
+                }
             });
 
             Object.keys(clients).forEach(function (id) {

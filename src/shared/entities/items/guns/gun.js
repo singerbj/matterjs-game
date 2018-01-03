@@ -17,7 +17,7 @@ module.exports = function (x, y) {
     var type = 'g';
     body.entityId = entityId;
     body.type = type;
-    return {
+    var entity = {
         id: entityId,
         type: type,
         x: adjustedX,
@@ -51,4 +51,6 @@ module.exports = function (x, y) {
             }
         }
     };
+    body.entity = entity;
+    return entity;
 };

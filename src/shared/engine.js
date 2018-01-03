@@ -27,6 +27,33 @@ module.exports = function (callback) {
             event.pairs.forEach(function(pair){
                 if(pair.bodyA.type === 'g'|| pair.bodyB.type === 'g'){
                     pair.isActive = false;
+                    var player, item;
+                    if(pair.bodyA.type === 'p'){
+                        player = pair.bodyA.entity;
+                        item = pair.bodyB.entity;
+                    }else{
+                        player = pair.bodyB.entity;
+                        item = pair.bodyA.entity;
+                    }
+                    if(!item.deleted){
+                        player.ground[item.id] = item;
+                    }
+                }
+            });
+        });
+
+        Matter.Events.on(engine, "collisionEnd", function(event){
+            event.pairs.forEach(function(pair){
+                if(pair.bodyA.type === 'g'|| pair.bodyB.type === 'g'){
+                    var player, item;
+                    if(pair.bodyA.type === 'p'){
+                        player = pair.bodyA.entity;
+                        item = pair.bodyB.entity;
+                    }else{
+                        player = pair.bodyB.entity;
+                        item = pair.bodyA.entity;
+                    }
+                    delete player.ground[item.id];
                 }
             });
         });
