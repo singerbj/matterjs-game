@@ -255,6 +255,18 @@ client.on('open', function () {
         mouseY = e.offsetY;
     };
 
+    var acceptInput = true;
+    canvas.onmouseenter = function(){
+        acceptInput = true;
+    };
+
+    canvas.onmouseout = function(){
+        acceptInput = false;
+        Object.keys(keys).forEach(function(key){
+            keys[key] = 'onkeyup';
+        });
+    };
+
     window.onmousedown = function (event) {
         sendEvent({
             type: 'onmousedown',
@@ -268,16 +280,18 @@ client.on('open', function () {
         });
     };
     window.onkeydown = function (event) {
-        if (event.key === 'Escape') {
-            var window = remote.getCurrentWindow();
-            window.close();
-        } else if (event.key === 'F11') {
-            event.preventDefault();
-        } else {
-            keys[event.key.toUpperCase()] = 'onkeydown';
-            sendEvent({
-                keys: keys
-            });
+        if(acceptInput){
+            if (event.key === 'Escape') {
+                var window = remote.getCurrentWindow();
+                window.close();
+            } else if (event.key === 'F11') {
+                event.preventDefault();
+            } else {
+                keys[event.key.toUpperCase()] = 'onkeydown';
+                sendEvent({
+                    keys: keys
+                });
+            }
         }
     };
     window.onkeyup = function (event) {
