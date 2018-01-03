@@ -65,8 +65,8 @@ module.exports = function (startServer) {
                     c.player.firing = false;
                 } else if (event.type === 'mouse') {
                     c.player.mouse = {
-                        x: c.player.x + event.x,
-                        y: c.player.y + event.y
+                        x: event.x,
+                        y: event.y
                     };
                     c.player.aim = (4 * event.y) / (4 * event.x);
                 }
@@ -164,7 +164,7 @@ module.exports = function (startServer) {
             });
         });
 
-        var mapBodies = MapBuilder.buildMap(1000, 1000);
+        var mapBodies = MapBuilder.buildMap(4000, 4000);
         mapBodies.walls.forEach(function (wall) {
             wallMap[wall.id] = wall;
             Engine.addWall(wall);

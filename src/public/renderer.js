@@ -3,16 +3,16 @@ const Matter = require('matter-js/build/matter.js');
 const raf = require('raf');
 const Decoder = new TextDecoder("utf-8");
 const Paper = require('paper');
-const Howler = require('howler'); //require('node_modules/howler/dist/howler.min.js');
+const Howler = require('howler');
 
 //Load sounds
 var gunShotSound = new Howl({
     src: ['../audio/gunshot.wav'],
-    volume: 0.6
+    volume: 0.3
 });
 var reloadSound = new Howl({
     src: ['../audio/reload.mp3'],
-    volume: 0.8
+    volume: 0.5
 });
 
 require('../shared/game.js')(confirm("Start the server?"));
@@ -148,20 +148,26 @@ client.on('open', function () {
         }
     };
 
+    var path;
     var renderShots = function () {
         shots.forEach(function (shot) {
-            if (shot) {
+            if (shot && !shotMap[shot.id]) {
                 gunShotSound.play();
                 shotMap[shot.id] = shot;
                 shotMap[shot.id].path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
                 shotMap[shot.id].path.sendToBack();
                 shotMap[shot.id].path.strokeWidth = 1.5;
                 shotMap[shot.id].path.opacity = 0.2;
-                // if(shotMap[shot.id].hit === true){
-                //     shotMap[shot.id].path.strokeColor = 'red';
-                // }else{
                 shotMap[shot.id].path.strokeColor = 'black';
-                // }
+
+                if(shot.hit === true){
+                    path = new Paper.Path.Circle(new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY), 5);
+                    path.opacity = 0.3;
+                    path.fillColor = 'yellow';
+                    setTimeout(function(){
+                        path.remove();
+                    }, 30);
+                }
             }
         });
         var shot, previousOpacity, previousStrokeWidth;
@@ -173,11 +179,7 @@ client.on('open', function () {
                 shotMap[key].path = new Paper.Path.Line(new Paper.Point(shotMap[key].start.x + offsetX, shotMap[key].start.y + offsetY), new Paper.Point(shotMap[key].end.x + offsetX, shotMap[key].end.y + offsetY));
                 shotMap[key].path.sendToBack();
                 shotMap[key].path.strokeWidth = previousStrokeWidth + 0.2;
-                // if(shotMap[key] && shotMap[key].hit === true){
-                //     shotMap[key].path.strokeColor = 'red';
-                // }else{
                 shotMap[key].path.strokeColor = 'black';
-                // }
                 shotMap[key].path.opacity = previousOpacity - 0.01;
             } else {
                 delete shotMap[key];
@@ -186,12 +188,12 @@ client.on('open', function () {
 
     };
 
-    var renderFps = function (clientFps) {
+    var renderFps = function () {
         if (!fpsText) {
             fpsText = new Paper.PointText(new Point(marginLeft + 5, marginTop + 20));
             fpsText.fillColor = 'black';
         } else {
-            fpsText.content = 'Server: ' + fps.toString() + ' - Client: ' + clientFps;
+            fpsText.content = 'Server: ' + fps.toString();
             fpsText.bringToFront();
         }
     };
@@ -222,9 +224,6 @@ client.on('open', function () {
     Paper.install(window);
     Paper.setup(canvas);
 
-    var clientLastTimeFps;
-    var clientFps = -1;
-    var clientLastFpsDraw = Date.now();
     var currentTime;
     view.onFrame = function () {
         deleteObjects(toDelete);
@@ -242,14 +241,8 @@ client.on('open', function () {
             }));
         }
 
-        currentTime = Date.now();
-        if (clientLastTimeFps && (currentTime - clientLastFpsDraw) > 500) {
-            clientLastFpsDraw = currentTime;
-            clientFps = Math.floor(1000 / (currentTime - clientLastTimeFps));
-        }
-        clientLastTimeFps = currentTime;
         renderHud();
-        renderFps(clientFps);
+        renderFps();
     }
 
     window.Paper = Paper;

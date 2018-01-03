@@ -42,6 +42,8 @@ module.exports = function (x, y) {
         handleFiring: function (engine) {
             var self = this;
             var time = Date.now();
+            var playerX = this.x;
+            var playerY = this.y;
             if (!this.reloading) {
                 if (this.firing && this.gun.ammo > 0 && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)) {
                     this.lastShot = time;
@@ -51,25 +53,25 @@ module.exports = function (x, y) {
 
                     var shotX;
                     var shotY;
-                    if (this.mouse.x < this.x) {
-                        shotX = this.x - k;
-                        shotY = this.y - (k * this.aim);
-                    } else {
-                        shotX = this.x + k;
-                        shotY = this.y + (k * this.aim);
-                    }
 
+                    if ((playerX + this.mouse.x) < playerX) {
+                        shotX = playerX - k;
+                        shotY = playerY - (k * this.aim);
+                    } else {
+                        shotX = playerX + k;
+                        shotY = playerY + (k * this.aim);
+                    }
                     if (this.aim === -Infinity) {
-                        shotY = this.y - this.gun.range;
+                        shotY = playerY - this.gun.range;
                     } else if (this.aim === Infinity) {
-                        shotY = this.y + this.gun.range;
+                        shotY = playerY + this.gun.range;
                     }
 
                     var shotObj = {
                         id: Helpers.getUUID(),
                         start: {
-                            x: this.x,
-                            y: this.y
+                            x: playerX,
+                            y: playerY
                         },
                         end: {
                             x: shotX,
