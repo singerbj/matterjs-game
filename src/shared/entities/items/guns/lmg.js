@@ -19,23 +19,25 @@ module.exports = function (x, y) {
     body.type = type;
     var entity = {
         id: entityId,
+        name: 'Light Machine Gun',
         type: type,
         x: adjustedX,
         y: adjustedY,
         w: width,
         h: height,
         fireRate: 100,
-        damage: 100,
         range: 1000,
-        spread: 15,
+        spread: 25,
         maxAmmo: 64,
         ammo: 64,
         reloadTime: 2500,
         damage: 100,
+        bulletsPerShot: 1,
         matterjs: body,
         serialize: function () {
             return {
                 i: this.id,
+                n: this.name,
                 t: this.type,
                 x: this.x,
                 y: this.y,

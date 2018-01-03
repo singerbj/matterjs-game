@@ -1,6 +1,5 @@
 const Matter = require('matter-js/build/matter.js');
 const Helpers = require('../helpers');
-const Gun = require('./items/guns/gun');
 const Raycast = require('../raycast');
 
 module.exports = function (x, y) {
@@ -48,62 +47,64 @@ module.exports = function (x, y) {
             var time = Date.now();
             var playerX = this.x;
             var playerY = this.y;
-            if(this.gun){
+            if (this.gun) {
                 if (!this.reloading) {
                     if (this.firing && this.gun.ammo > 0 && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)) {
                         this.lastShot = time;
                         this.gun.ammo -= 1;
 
-                        this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
+                        var i, shotObj, result, shotX, shotY, k, arrayOfShots = [];
+                        for (i = 0; i < this.gun.bulletsPerShot; i += 1) {
+                            this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
 
-                        var k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
+                            k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
 
-                        var shotX;
-                        var shotY;
-                        if ((playerX + this.mouse.x) < playerX) {
-                            shotX = playerX - k;
-                            shotY = playerY - (k * this.aim);
-                        } else {
-                            shotX = playerX + k;
-                            shotY = playerY + (k * this.aim);
-                        }
+                            if ((playerX + this.mouse.x) < playerX) {
+                                shotX = playerX - k;
+                                shotY = playerY - (k * this.aim);
+                            } else {
+                                shotX = playerX + k;
+                                shotY = playerY + (k * this.aim);
+                            }
 
-                        if (this.aim === -Infinity) {
-                            shotY = playerY - this.gun.range;
-                        } else if (this.aim === Infinity) {
-                            shotY = playerY + this.gun.range;
-                        }
+                            if (this.aim === -Infinity) {
+                                shotY = playerY - this.gun.range;
+                            } else if (this.aim === Infinity) {
+                                shotY = playerY + this.gun.range;
+                            }
 
-                        var shotObj = {
-                            id: Helpers.getUUID(),
-                            start: {
-                                x: playerX,
-                                y: playerY
-                            },
-                            end: {
-                                x: shotX,
-                                y: shotY
-                            },
-                            hit: false,
-                            time: Date.now(),
-                            damage: this.gun.damage
-                        };
-
-                        var result = Raycast(Matter.Composite.allBodies(engine.world).filter(function (body) {
-                            return body.id !== self.matterjs.id && body.entity.type !== 'g';
-                        }), shotObj.start, shotObj.end);
-
-                        if (result.length > 0) {
-                            shotObj.end = {
-                                x: result[0].point.x,
-                                y: result[0].point.y,
+                            shotObj = {
+                                id: Helpers.getUUID(),
+                                start: {
+                                    x: playerX,
+                                    y: playerY
+                                },
+                                end: {
+                                    x: shotX,
+                                    y: shotY
+                                },
+                                hit: false,
+                                time: Date.now(),
+                                damage: this.gun.damage
                             };
-                            shotObj.hit = true;
-                            shotObj.hitEntityId = result[0].body.entityId;
-                            shotObj.shooterEntityId = result[0].body.entityId;
+
+                            result = Raycast(Matter.Composite.allBodies(engine.world).filter(function (body) {
+                                return body.id !== self.matterjs.id && body.entity.type !== 'g';
+                            }), shotObj.start, shotObj.end);
+
+                            if (result.length > 0) {
+                                shotObj.end = {
+                                    x: result[0].point.x,
+                                    y: result[0].point.y,
+                                };
+                                shotObj.hit = true;
+                                shotObj.hitEntityId = result[0].body.entityId;
+                                shotObj.shooterEntityId = result[0].body.entityId;
+                            }
+                            arrayOfShots.push(shotObj);
                         }
 
-                        return shotObj;
+                        return arrayOfShots;
                     }
                 } else {
                     if (!this.reloadStart) {
@@ -124,18 +125,16 @@ module.exports = function (x, y) {
         handleHit: function (shot) {
             this.health -= shot.damage;
         },
-        handlePickup: function(Engine, itemMap, toDelete){
+        handlePickup: function (itemMap) {
             var self = this;
-            Object.keys(this.ground).forEach(function(key){
+            Object.keys(this.ground).forEach(function (key) {
                 itemMap[key].deleted = true;
                 self.inventory[key] = self.ground[key];
-                delete self.ground[key];
-                if(!self.gun && self.inventory[key].type === 'g'){
+                // delete self.ground[key];
+                if (!self.gun && self.inventory[key].type === 'g') {
                     self.gun = self.inventory[key];
                 }
             });
-
-
         },
         serialize: function () {
             return {

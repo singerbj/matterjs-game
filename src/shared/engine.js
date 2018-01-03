@@ -3,7 +3,7 @@ const raf = require('raf');
 const Player = require('./entities/player');
 const Helpers = require('./helpers');
 
-module.exports = function (callback) {
+module.exports = function (beforeCallback, afterCallback) {
     var engine, render;
     var scaleX = 50;
     var scaleY = -50;
@@ -23,37 +23,21 @@ module.exports = function (callback) {
         engine.world.gravity.x = 0;
         engine.world.gravity.y = 0;
 
-        Matter.Events.on(engine, "collisionStart", function(event){
-            event.pairs.forEach(function(pair){
-                if(pair.bodyA.type === 'g'|| pair.bodyB.type === 'g'){
+        Matter.Events.on(engine, "collisionStart", function (event) {
+            event.pairs.forEach(function (pair) {
+                if (pair.bodyA.type === 'g' || pair.bodyB.type === 'g') {
                     pair.isActive = false;
                     var player, item;
-                    if(pair.bodyA.type === 'p'){
+                    if (pair.bodyA.type === 'p') {
                         player = pair.bodyA.entity;
                         item = pair.bodyB.entity;
-                    }else{
+                    } else {
                         player = pair.bodyB.entity;
                         item = pair.bodyA.entity;
                     }
-                    if(!item.deleted){
+                    if (!item.deleted) {
                         player.ground[item.id] = item;
                     }
-                }
-            });
-        });
-
-        Matter.Events.on(engine, "collisionEnd", function(event){
-            event.pairs.forEach(function(pair){
-                if(pair.bodyA.type === 'g'|| pair.bodyB.type === 'g'){
-                    var player, item;
-                    if(pair.bodyA.type === 'p'){
-                        player = pair.bodyA.entity;
-                        item = pair.bodyB.entity;
-                    }else{
-                        player = pair.bodyB.entity;
-                        item = pair.bodyA.entity;
-                    }
-                    delete player.ground[item.id];
                 }
             });
         });
@@ -66,8 +50,9 @@ module.exports = function (callback) {
 
     var animate = function (t) {
         raf(animate);
-        callback(engine, fps);
+        beforeCallback(engine, fps);
         Matter.Engine.update(engine, 1000 / 60);
+        afterCallback(engine, fps);
         currentTime = Date.now();
         if (lastTimeFps && (currentTime - lastFpsDraw) > 500) {
             lastFpsDraw = currentTime;

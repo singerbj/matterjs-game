@@ -36,7 +36,7 @@ var canvasHeight = 1080;
 
 var marginLeft = 0;
 var marginTop = 0;
-var fpsText, ammoText, healthText;
+var fpsText, ammoText, healthText, groundText;
 var centerCanvas = function () {
     lastResize = Date.now();
     marginLeft = ((canvasWidth - window.innerWidth) / 2);
@@ -57,6 +57,10 @@ window.onresize = function () {
     if (healthText) {
         healthText.remove();
         healthText = undefined;
+    }
+    if (groundText) {
+        groundText.remove();
+        groundText = undefined;
     }
     centerCanvas();
 };
@@ -111,7 +115,7 @@ client.on('open', function () {
 
             entityMap.forEach(function (entity) {
                 if (!(entity instanceof Array)) {
-                    if(entity.deleted !== true){
+                    if (entity.deleted !== true) {
                         if (!bodyMap[entity.i]) {
                             var body;
                             if (entity.t === 'w') {
@@ -134,7 +138,7 @@ client.on('open', function () {
                         if (entity.a) {
                             bodyMap[entity.i].rotate((entity.a * 180 / Math.PI) - (bodyMap[entity.i].rotation));
                         }
-                    }else{
+                    } else {
                         bodyMap[entity.i].remove();
                     }
                 }
@@ -154,11 +158,12 @@ client.on('open', function () {
         }
     };
 
-    var path;
     var renderShots = function () {
+        if (shots.length > 0) {
+            gunShotSound.play();
+        }
         shots.forEach(function (shot) {
             if (shot && !shotMap[shot.id]) {
-                gunShotSound.play();
                 shotMap[shot.id] = shot;
                 shotMap[shot.id].path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
                 shotMap[shot.id].path.sendToBack();
@@ -166,11 +171,11 @@ client.on('open', function () {
                 shotMap[shot.id].path.opacity = 0.2;
                 shotMap[shot.id].path.strokeColor = 'black';
 
-                if(shot.hit === true){
-                    path = new Paper.Path.Circle(new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY), 5);
+                if (shot.hit === true) {
+                    var path = new Paper.Path.Circle(new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY), 5);
                     path.opacity = 0.3;
                     path.fillColor = 'yellow';
-                    setTimeout(function(){
+                    setTimeout(function () {
                         path.remove();
                     }, 30);
                 }
@@ -213,12 +218,28 @@ client.on('open', function () {
             healthText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height) - marginTop - 20));
             healthText.fillColor = 'black';
         }
-        if (player && player.g) {
-            ammoText.content = 'Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
-            healthText.content = Math.ceil(player.h / 10) + '% HP'
-            ammoText.bringToFront();
-            healthText.bringToFront();
+        if (!groundText) {
+            groundText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height) - marginTop - 60));
+            healthText.fillColor = 'black';
         }
+        if (player) {
+            if (player.g) {
+                ammoText.content = 'Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
+            }
+            healthText.content = Math.ceil(player.h / 10) + '% HP';
+            if (player.gr.length > 0) {
+                groundText.content = 'Press F to pickup: ' +
+                    player.gr.map(function (item) {
+                        return item.n;
+                    }).join(', ');
+            } else {
+                groundText.content = ''
+            }
+        }
+
+        ammoText.bringToFront();
+        healthText.bringToFront();
+        groundText.bringToFront();
     };
 
     var handleReloads = function () {
@@ -259,14 +280,16 @@ client.on('open', function () {
         mouseY = e.offsetY;
     };
 
-    var acceptInput = true;
-    canvas.onmouseenter = function(){
-        acceptInput = true;
+    // var acceptInput = true;
+    canvas.onmouseenter = function () {
+        Object.keys(keys).forEach(function (key) {
+            keys[key] = 'onkeyup';
+        });
     };
 
-    canvas.onmouseout = function(){
-        acceptInput = false;
-        Object.keys(keys).forEach(function(key){
+    canvas.onmouseout = function () {
+        // acceptInput = false;
+        Object.keys(keys).forEach(function (key) {
             keys[key] = 'onkeyup';
         });
     };
@@ -284,19 +307,19 @@ client.on('open', function () {
         });
     };
     window.onkeydown = function (event) {
-        if(acceptInput){
-            if (event.key === 'Escape') {
-                var window = remote.getCurrentWindow();
-                window.close();
-            } else if (event.key === 'F11') {
-                event.preventDefault();
-            } else {
-                keys[event.key.toUpperCase()] = 'onkeydown';
-                sendEvent({
-                    keys: keys
-                });
-            }
+        // if (acceptInput) {
+        if (event.key === 'Escape') {
+            var window = remote.getCurrentWindow();
+            window.close();
+        } else if (event.key === 'F11') {
+            event.preventDefault();
+        } else {
+            keys[event.key.toUpperCase()] = 'onkeydown';
+            sendEvent({
+                keys: keys
+            });
         }
+        // }
     };
     window.onkeyup = function (event) {
         keys[event.key.toUpperCase()] = 'onkeyup';

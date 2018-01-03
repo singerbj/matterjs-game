@@ -32,9 +32,9 @@ module.exports = function (startServer) {
 
             c.on('message', function (data) {
                 event = JSON.parse(data);
-                if (event.keys){
+                if (event.keys) {
                     Matter.Sleeping.set(c.player.matterjs, false);
-                    Object.keys(event.keys).forEach(function(key){
+                    Object.keys(event.keys).forEach(function (key) {
                         if (key === 'W') {
                             c.player.moving.up = (event.keys[key] === 'onkeydown');
                         } else if (key === 'A') {
@@ -44,7 +44,7 @@ module.exports = function (startServer) {
                         } else if (key === 'D') {
                             c.player.moving.right = (event.keys[key] === 'onkeydown');
                         } else if (key === 'F' && event.keys[key] === 'onkeydown') {
-                            c.player.handlePickup(Engine, itemMap, toDelete);
+                            c.player.handlePickup(itemMap);
                         } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
                             c.player.reloading = true;
                             reloads.push({
@@ -87,31 +87,38 @@ module.exports = function (startServer) {
         });
 
         var velocity = {
-            x: 0,
-            y: 0
-        };
+                x: 0,
+                y: 0
+            },
+            shots = [];
         var Engine = require('./engine')(function (engine, fps) {
 
             //Add promise to these loops
-            var shots = [],
+            shots = [];
+            var arrayOfShots,
                 shot, hitEntity;
             Object.keys(playerMap).forEach(function (id) {
                 playerMap[id].x = playerMap[id].matterjs.position.x;
                 playerMap[id].y = playerMap[id].matterjs.position.y;
-                shot = playerMap[id].handleFiring(engine);
-                if (shot) {
-                    if (shot.hitEntityId) {
-                        if (playerMap[shot.hitEntityId]) {
-                            hitEntity = playerMap[shot.hitEntityId];
-                        } else if (wallMap[shot.hitEntityId]) {
-                            hitEntity = wallMap[shot.hitEntityId];
+                playerMap[id].ground = {};
+
+                arrayOfShots = playerMap[id].handleFiring(engine);
+                if (arrayOfShots) {
+                    arrayOfShots.forEach(function (shot) {
+                        if (shot.hitEntityId) {
+                            if (playerMap[shot.hitEntityId]) {
+                                hitEntity = playerMap[shot.hitEntityId];
+                            } else if (wallMap[shot.hitEntityId]) {
+                                hitEntity = wallMap[shot.hitEntityId];
+                            }
+                            if (hitEntity && hitEntity.handleHit) {
+                                hitEntity.handleHit(shot);
+                            }
                         }
-                        if (hitEntity && hitEntity.handleHit) {
-                            hitEntity.handleHit(shot);
-                        }
-                    }
-                    shots.push(shot);
+                        shots.push(shot);
+                    });
                 }
+
             });
 
             Object.keys(wallMap).forEach(function (id) {
@@ -120,10 +127,10 @@ module.exports = function (startServer) {
             });
 
             Object.keys(itemMap).forEach(function (id) {
-                if(!itemMap[id].deleted){
+                if (!itemMap[id].deleted) {
                     itemMap[id].x = itemMap[id].matterjs.position.x;
                     itemMap[id].y = itemMap[id].matterjs.position.y;
-                }else{
+                } else {
                     Engine.removeItem(itemMap[id]);
                     delete itemMap[id];
                     toDelete.push(id);
@@ -151,23 +158,25 @@ module.exports = function (startServer) {
 
                     clients[id].player.x = clients[id].player.matterjs.position.x;
                     clients[id].player.y = clients[id].player.matterjs.position.y;
-
-                    clients[id].send(JSON.stringify({
-                        playerArray: Helpers.serializeMap(playerMap),
-                        wallArray: Helpers.serializeMap(wallMap),
-                        itemArray: Helpers.serializeMap(itemMap),
-                        toDelete: toDelete,
-                        player: clients[id].player.serialize(),
-                        shots: shots,
-                        fps: fps,
-                        reloads: reloads,
-                    }));
-                    reloads = [];
                 }
+            });
+        }, function (engine, fps) {
+            Object.keys(clients).forEach(function (id) {
+                clients[id].send(JSON.stringify({
+                    playerArray: Helpers.serializeMap(playerMap),
+                    wallArray: Helpers.serializeMap(wallMap),
+                    itemArray: Helpers.serializeMap(itemMap),
+                    toDelete: toDelete,
+                    player: clients[id].player.serialize(),
+                    shots: shots,
+                    fps: fps,
+                    reloads: reloads,
+                }));
+                reloads = [];
             });
         });
 
-        var mapBodies = MapBuilder.buildMap(1000, 1000);
+        var mapBodies = MapBuilder.buildMap(4000, 4000);
         mapBodies.walls.forEach(function (wall) {
             wallMap[wall.id] = wall;
             Engine.addWall(wall);
@@ -176,21 +185,5 @@ module.exports = function (startServer) {
             itemMap[item.id] = item;
             Engine.addItem(item);
         });
-        // mapBodies.guns.forEach(function(gun){
-        //
-        // });
-
-        // // add a bunch of random walls
-        // for(var i = 0; i < 20; i += 1){
-        //     var wall = new Wall(Helpers.rand(100, 1000), Helpers.rand(100, 1000), Helpers.rand(20, 380), Helpers.rand(20, 380));
-        //     wallMap[wall.id] = wall;
-        //     Engine.addWall(wall);
-        // }
-        //
-        // for(var i = 0; i < 1; i += 1){
-        //     var wall = new Wall(Helpers.rand(0, 40), Helpers.rand(0, 40), Helpers.rand(20, 40), Helpers.rand(20, 40));
-        //     wallMap[wall.id] = wall;
-        //     Engine.addWall(wall);
-        // }
     }
 }

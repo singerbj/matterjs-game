@@ -3,7 +3,11 @@ const Wall = require('./entities/wall');
 const Helpers = require('./helpers');
 
 var possibleItems = [
-    require('./entities/items/guns/gun')
+    require('./entities/items/guns/lmg'),
+    require('./entities/items/guns/shotgun'),
+    require('./entities/items/guns/ar'),
+    require('./entities/items/guns/smg'),
+    require('./entities/items/guns/sniper')
 ];
 
 module.exports = {
