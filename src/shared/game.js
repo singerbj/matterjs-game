@@ -32,38 +32,33 @@ module.exports = function (startServer) {
 
             c.on('message', function (data) {
                 event = JSON.parse(data);
-                if (event.type === 'onkeydown') {
+                if (event.keys){
                     Matter.Sleeping.set(c.player.matterjs, false);
-                    if (event.key === 'w' || event.key === 'W') {
-                        c.player.moving.up = true;
-                    } else if (event.key === 'a' || event.key === 'A') {
-                        c.player.moving.left = true;
-                    } else if (event.key === 's' || event.key === 'S') {
-                        c.player.moving.down = true;
-                    } else if (event.key === 'd' || event.key === 'D') {
-                        c.player.moving.right = true;
-                    } else if ((event.key === 'r' || event.key === 'R') && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
-                        c.player.reloading = true;
-                        reloads.push({
-                            x: c.player.x,
-                            y: c.player.y
-                        });
-                    }
-                } else if (event.type === 'onkeyup') {
-                    if (event.key === 'w' || event.key === 'W') {
-                        c.player.moving.up = false;
-                    } else if (event.key === 'a' || event.key === 'A') {
-                        c.player.moving.left = false;
-                    } else if (event.key === 's' || event.key === 'S') {
-                        c.player.moving.down = false;
-                    } else if (event.key === 'd' || event.key === 'D') {
-                        c.player.moving.right = false;
-                    }
-                } else if (event.type === 'onmousedown') {
+                    Object.keys(event.keys).forEach(function(key){
+                        if (key === 'W') {
+                            c.player.moving.up = (event.keys[key] === 'onkeydown');
+                        } else if (key === 'A') {
+                            c.player.moving.left = (event.keys[key] === 'onkeydown');
+                        } else if (key === 'S') {
+                            c.player.moving.down = (event.keys[key] === 'onkeydown');
+                        } else if (key === 'D') {
+                            c.player.moving.right = (event.keys[key] === 'onkeydown');
+                        } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
+                            c.player.reloading = true;
+                            reloads.push({
+                                x: c.player.x,
+                                y: c.player.y
+                            });
+                        }
+                    });
+                }
+                if (event.type === 'onmousedown') {
                     c.player.firing = true;
-                } else if (event.type === 'onmouseup') {
+                }
+                if (event.type === 'onmouseup') {
                     c.player.firing = false;
-                } else if (event.type === 'mouse') {
+                }
+                if (event.type === 'mouse') {
                     c.player.mouse = {
                         x: event.x,
                         y: event.y

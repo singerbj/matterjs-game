@@ -4,6 +4,7 @@ const raf = require('raf');
 const Decoder = new TextDecoder("utf-8");
 const Paper = require('paper');
 const Howler = require('howler');
+const remote = require('electron').remote;
 
 //Load sounds
 var gunShotSound = new Howl({
@@ -25,6 +26,7 @@ var itemArray = [];
 var toDelete = [];
 var shots = [];
 var reloads = [];
+var keys = {};
 var fps = -1;
 var player, decodedDataList, parsedData, mouseX = 0,
     mouseY = 0;
@@ -99,7 +101,7 @@ client.on('open', function () {
         client.send(JSON.stringify(event));
     };
 
-    require('./input')(sendEvent);
+    // require('./input')(sendEvent);
 
     var engine, render, entity, offsetX, offsetY;
     var renderObjects = function (entityMap) {
@@ -237,7 +239,8 @@ client.on('open', function () {
             client.send(JSON.stringify({
                 type: 'mouse',
                 x: mouseX - (canvas.width / 2),
-                y: mouseY - (canvas.height / 2)
+                y: mouseY - (canvas.height / 2),
+                keys: keys
             }));
         }
 
@@ -250,5 +253,37 @@ client.on('open', function () {
     canvas.onmousemove = function (e) {
         mouseX = e.offsetX;
         mouseY = e.offsetY;
+    };
+
+    window.onmousedown = function (event) {
+        sendEvent({
+            type: 'onmousedown',
+            which: event.which
+        });
+    };
+    window.onmouseup = function (event) {
+        sendEvent({
+            type: 'onmouseup',
+            which: event.which
+        });
+    };
+    window.onkeydown = function (event) {
+        if (event.key === 'Escape') {
+            var window = remote.getCurrentWindow();
+            window.close();
+        } else if (event.key === 'F11') {
+            event.preventDefault();
+        } else {
+            keys[event.key.toUpperCase()] = 'onkeydown';
+            sendEvent({
+                keys: keys
+            });
+        }
+    };
+    window.onkeyup = function (event) {
+        keys[event.key.toUpperCase()] = 'onkeyup';
+        sendEvent({
+            keys: keys
+        });
     };
 });
