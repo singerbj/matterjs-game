@@ -55,6 +55,10 @@ module.exports = function (x, y) {
 
                         var i, shotObj, result, shotX, shotY, k, arrayOfShots = [];
                         for (i = 0; i < this.gun.bulletsPerShot; i += 1) {
+                            //TODO: get minimum radians, the following doesnt work
+                            while(this.aim > (2 * Math.PI)) {
+                                 this.aim -= (2 * Math.PI);
+                            }
                             console.log(this.aim);
                             this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
 
