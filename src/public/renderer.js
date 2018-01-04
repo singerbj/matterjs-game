@@ -224,7 +224,7 @@ client.on('open', function () {
         }
         if (player) {
             if (player.g) {
-                ammoText.content = 'Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
+                ammoText.content =  player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
             }
             healthText.content = Math.ceil(player.h / 10) + '% HP';
             if (player.gr.length > 0) {

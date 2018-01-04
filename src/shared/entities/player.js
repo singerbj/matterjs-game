@@ -55,6 +55,7 @@ module.exports = function (x, y) {
 
                         var i, shotObj, result, shotX, shotY, k, arrayOfShots = [];
                         for (i = 0; i < this.gun.bulletsPerShot; i += 1) {
+                            console.log(this.aim);
                             this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
 
                             k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
@@ -128,13 +129,22 @@ module.exports = function (x, y) {
         handlePickup: function (itemMap) {
             var self = this;
             Object.keys(this.ground).forEach(function (key) {
-                itemMap[key].deleted = true;
-                self.inventory[key] = self.ground[key];
-                // delete self.ground[key];
-                if (!self.gun && self.inventory[key].type === 'g') {
-                    self.gun = self.inventory[key];
+                if(Object.keys(self.inventory).length < 2){
+                    itemMap[key].deleted = true;
+                    self.inventory[key] = self.ground[key];
+                    if (!self.gun && self.inventory[key].type === 'g') {
+                        self.gun = self.inventory[key];
+                    }
                 }
             });
+        },
+        switchWeapon: function(key){
+            if(!this.reloading){
+                var gun = this.inventory[Object.keys(this.inventory)[parseInt(key, 10) - 1]]
+                if(gun){
+                    this.gun = gun;
+                }
+            }
         },
         serialize: function () {
             return {

@@ -51,6 +51,8 @@ module.exports = function (startServer) {
                                 x: c.player.x,
                                 y: c.player.y
                             });
+                        } else if ((key === '1' || key === '2') && event.keys[key] === 'onkeydown') {
+                            c.player.switchWeapon(key);
                         }
                     });
                 }
