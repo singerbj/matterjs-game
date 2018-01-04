@@ -112,8 +112,6 @@ var joinGame = function(startServer, ipToJoin){
             client.send(JSON.stringify(event));
         };
 
-        // require('./input')(sendEvent);
-
         var engine, render, entity, offsetX, offsetY;
         var renderObjects = function (entityMap) {
             if (player) {
