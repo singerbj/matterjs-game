@@ -20,7 +20,6 @@ module.exports = function (startServer) {
             port: 6574
         });
         server.on('connection', function (c) {
-            // console.log('new client', c);
             //save client
             c.id = Helpers.getUUID();
             clients[c.id] = c;
@@ -80,11 +79,11 @@ module.exports = function (startServer) {
             });
 
             c.on('error', function (err) {
-                // console.log('player connection error');
-                Engine.removePlayer(playerMap[c.player.id]);
-                delete playerMap[c.player.id];
-                delete clients[c.id];
-                toDelete.push(c.player.id);
+                // Engine.removePlayer(playerMap[c.player.id]);
+                // delete playerMap[c.player.id];
+                // delete clients[c.id];
+                // toDelete.push(c.player.id);
+                console.log(err);
             });
         });
 

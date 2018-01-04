@@ -11,12 +11,6 @@ module.exports = function (beforeCallback, afterCallback) {
     var init = function () {
         engine = Matter.Engine.create();
 
-        // render = Matter.Render.create({
-        //     element: document.body,
-        //     engine: engine
-        //     // options: options
-        // });
-
         Matter.Engine.run(engine);
         // Matter.Render.run(render);
         engine.enableSleeping = true;
@@ -25,10 +19,10 @@ module.exports = function (beforeCallback, afterCallback) {
 
         Matter.Events.on(engine, "collisionStart", function (event) {
             event.pairs.forEach(function (pair) {
-                if (pair.bodyA.type === 'g' || pair.bodyB.type === 'g') {
+                if (pair.bodyA.entity.type === 'g' || pair.bodyB.entity.type === 'g') {
                     pair.isActive = false;
                     var player, item;
-                    if (pair.bodyA.type === 'p') {
+                    if (pair.bodyA.entity.type === 'p') {
                         player = pair.bodyA.entity;
                         item = pair.bodyB.entity;
                     } else {
@@ -66,31 +60,31 @@ module.exports = function (beforeCallback, afterCallback) {
 
     return {
         addPlayer: function (player) {
-            console.log('player added');
             Matter.World.addBody(engine.world, player.matterjs);
+            console.log('player added');
         },
         // getBody: function(playerId){
         //     world.getBodyById(playerId);
         // },
         removePlayer: function (player) {
-            console.log('player removed');
             Matter.Composite.remove(engine.world, player.matterjs);
+            console.log('player removed');
         },
         addWall: function (wall) {
-            console.log('wall added');
             Matter.World.addBody(engine.world, wall.matterjs);
+            console.log('wall added');
         },
         removeWall: function (wall) {
-            console.log('wall removed');
             Matter.Composite.remove(engine.world, wall.matterjs);
+            console.log('wall removed');
         },
         addItem: function (item) {
-            console.log('item added');
             Matter.World.addBody(engine.world, item.matterjs);
+            console.log('item added');
         },
         removeItem: function (item) {
-            console.log('item removed');
             Matter.Composite.remove(engine.world, item.matterjs);
+            console.log('item removed');
         }
     };
 }

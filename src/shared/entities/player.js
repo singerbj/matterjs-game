@@ -12,8 +12,6 @@ module.exports = function (x, y) {
     Matter.Body.setInertia(body, Infinity);
     var entityId = Helpers.getUUID();
     var type = 'p';
-    body.entityId = entityId;
-    body.type = type;
     var entity = {
         id: entityId,
         type: type,

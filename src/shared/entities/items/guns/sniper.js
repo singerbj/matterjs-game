@@ -15,8 +15,6 @@ module.exports = function (x, y) {
     Matter.Body.setStatic(body, true);
     var entityId = Helpers.getUUID();
     var type = 'g';
-    body.entityId = entityId;
-    body.type = type;
     var entity = {
         id: entityId,
         name: 'Sniper Rifle',

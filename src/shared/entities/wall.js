@@ -13,8 +13,6 @@ module.exports = function (x, y, w, h) {
     Matter.Body.setStatic(body, true);
     var entityId = Helpers.getUUID();
     var type = 'w';
-    body.entityId = entityId;
-    body.type = type;
     var entity = {
         id: entityId,
         type: type,
