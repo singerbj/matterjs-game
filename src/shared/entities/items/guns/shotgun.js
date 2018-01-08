@@ -25,7 +25,7 @@ module.exports = function (x, y) {
         h: height,
         fireRate: 1000,
         range: 400,
-        spread: 80,
+        spread: 50,
         maxAmmo: 5,
         ammo: 5,
         reloadTime: 2500,

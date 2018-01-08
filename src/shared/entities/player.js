@@ -54,11 +54,11 @@ module.exports = function (x, y) {
                         var i, shotObj, result, shotX, shotY, k, arrayOfShots = [];
                         for (i = 0; i < this.gun.bulletsPerShot; i += 1) {
                             //TODO: get minimum radians, the following doesnt work
-                            while(this.aim > (2 * Math.PI)) {
-                                 this.aim -= (2 * Math.PI);
-                            }
-                            console.log(this.aim);
-                            this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
+                            // while (this.aim > (2 * Math.PI)) {
+                            //     this.aim -= (2 * Math.PI);
+                            // }
+                            // console.log(this.aim);
+                            // this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
 
                             k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
 
@@ -75,6 +75,9 @@ module.exports = function (x, y) {
                             } else if (this.aim === Infinity) {
                                 shotY = playerY + this.gun.range;
                             }
+
+                            shotX += (Helpers.rand(-this.gun.spread, this.gun.spread));
+                            shotY += (Helpers.rand(-this.gun.spread, this.gun.spread));
 
                             shotObj = {
                                 id: Helpers.getUUID(),
@@ -131,7 +134,7 @@ module.exports = function (x, y) {
         handlePickup: function (itemMap) {
             var self = this;
             Object.keys(this.ground).forEach(function (key) {
-                if(Object.keys(self.inventory).length < 2){
+                if (Object.keys(self.inventory).length < 2) {
                     itemMap[key].deleted = true;
                     self.inventory[key] = self.ground[key];
                     if (!self.gun && self.inventory[key].type === 'g') {
@@ -140,10 +143,10 @@ module.exports = function (x, y) {
                 }
             });
         },
-        switchWeapon: function(key){
-            if(!this.reloading){
+        switchWeapon: function (key) {
+            if (!this.reloading) {
                 var gun = this.inventory[Object.keys(this.inventory)[parseInt(key, 10) - 1]]
-                if(gun){
+                if (gun) {
                     this.gun = gun;
                 }
             }
