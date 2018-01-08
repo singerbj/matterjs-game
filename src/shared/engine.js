@@ -67,8 +67,12 @@ module.exports = function (beforeCallback, afterCallback) {
         //     world.getBodyById(playerId);
         // },
         removePlayer: function (player) {
-            Matter.Composite.remove(engine.world, player.matterjs);
-            console.log('player removed');
+            if(player && player.matterjs){
+                Matter.Composite.remove(engine.world, player.matterjs);
+                console.log('player removed');
+            }else{
+                console.log('player already deleted');
+            }
         },
         addWall: function (wall) {
             Matter.World.addBody(engine.world, wall.matterjs);

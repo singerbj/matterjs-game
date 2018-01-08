@@ -31,51 +31,53 @@ module.exports = function (startServer) {
 
             c.on('message', function (data) {
                 event = JSON.parse(data);
-                if (event.keys) {
-                    Matter.Sleeping.set(c.player.matterjs, false);
-                    Object.keys(event.keys).forEach(function (key) {
-                        if (key === 'W') {
-                            c.player.moving.up = (event.keys[key] === 'onkeydown');
-                        } else if (key === 'A') {
-                            c.player.moving.left = (event.keys[key] === 'onkeydown');
-                        } else if (key === 'S') {
-                            c.player.moving.down = (event.keys[key] === 'onkeydown');
-                        } else if (key === 'D') {
-                            c.player.moving.right = (event.keys[key] === 'onkeydown');
-                        } else if (key === 'F' && event.keys[key] === 'onkeydown') {
-                            c.player.handlePickup(itemMap);
-                        } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
-                            c.player.reloading = true;
-                            reloads.push({
-                                x: c.player.x,
-                                y: c.player.y
-                            });
-                        } else if ((key === '1' || key === '2') && event.keys[key] === 'onkeydown') {
-                            c.player.switchWeapon(key);
-                        }
-                    });
-                }
-                if (event.type === 'onmousedown') {
-                    c.player.firing = true;
-                }
-                if (event.type === 'onmouseup') {
-                    c.player.firing = false;
-                }
-                if (event.type === 'mouse') {
-                    c.player.mouse = {
-                        x: event.x,
-                        y: event.y
-                    };
-                    c.player.aim = (4 * event.y) / (4 * event.x);
+                if(c.player){
+                    if (event.keys) {
+                        Matter.Sleeping.set(c.player.matterjs, false);
+                        Object.keys(event.keys).forEach(function (key) {
+                            if (key === 'W') {
+                                c.player.moving.up = (event.keys[key] === 'onkeydown');
+                            } else if (key === 'A') {
+                                c.player.moving.left = (event.keys[key] === 'onkeydown');
+                            } else if (key === 'S') {
+                                c.player.moving.down = (event.keys[key] === 'onkeydown');
+                            } else if (key === 'D') {
+                                c.player.moving.right = (event.keys[key] === 'onkeydown');
+                            } else if (key === 'F' && event.keys[key] === 'onkeydown') {
+                                c.player.handlePickup(itemMap);
+                            } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
+                                c.player.reloading = true;
+                                reloads.push({
+                                    x: c.player.x,
+                                    y: c.player.y
+                                });
+                            } else if ((key === '1' || key === '2') && event.keys[key] === 'onkeydown') {
+                                c.player.switchWeapon(key);
+                            }
+                        });
+                    }
+                    if (event.type === 'onmousedown') {
+                        c.player.firing = true;
+                    }
+                    if (event.type === 'onmouseup') {
+                        c.player.firing = false;
+                    }
+                    if (event.type === 'mouse') {
+                        c.player.mouse = {
+                            x: event.x,
+                            y: event.y
+                        };
+                        c.player.aim = (4 * event.y) / (4 * event.x);
+                    }
                 }
             });
 
             c.once('close', function () {
                 console.log('player left');
+                toDelete.push(c.player.id);
                 Engine.removePlayer(playerMap[c.player.id]);
                 delete playerMap[c.player.id];
                 delete clients[c.id];
-                toDelete.push(c.player.id);
             });
 
             c.on('error', function (err) {
@@ -132,14 +134,14 @@ module.exports = function (startServer) {
                     itemMap[id].x = itemMap[id].matterjs.position.x;
                     itemMap[id].y = itemMap[id].matterjs.position.y;
                 } else {
+                    toDelete.push(id);
                     Engine.removeItem(itemMap[id]);
                     delete itemMap[id];
-                    toDelete.push(id);
                 }
             });
 
             Object.keys(clients).forEach(function (id) {
-                if (clients[id].player) {
+                if (clients[id].player && clients[id].player.health > 0) {
                     if (clients[id].player.moving.up && !clients[id].player.moving.down) {
                         velocity.y = -clients[id].player.speed;
                     } else if (!clients[id].player.moving.up && clients[id].player.moving.down) {
@@ -174,6 +176,11 @@ module.exports = function (startServer) {
 
                     clients[id].player.x = clients[id].player.matterjs.position.x;
                     clients[id].player.y = clients[id].player.matterjs.position.y;
+                } else if(playerMap[clients[id].player.id] && clients[id].player.health === 0){
+                    toDelete.push(clients[id].player.id);
+                    Engine.removePlayer(playerMap[clients[id].player.id]);
+                    delete playerMap[clients[id].player.id];
+                    // delete clients[id].player;
                 }
             });
         }, function (engine, fps) {
@@ -183,7 +190,7 @@ module.exports = function (startServer) {
                     wallArray: Helpers.serializeMap(wallMap),
                     itemArray: Helpers.serializeMap(itemMap),
                     toDelete: toDelete,
-                    player: clients[id].player.serialize(),
+                    player: clients[id].player ? clients[id].player.serialize() : undefined,
                     shots: shots,
                     fps: fps,
                     reloads: reloads,
@@ -192,7 +199,7 @@ module.exports = function (startServer) {
             });
         });
 
-        var mapBodies = MapBuilder.buildMap(8000, 8000);
+        var mapBodies = MapBuilder.buildMap(1000, 1000);
         mapBodies.walls.forEach(function (wall) {
             wallMap[wall.id] = wall;
             Engine.addWall(wall);

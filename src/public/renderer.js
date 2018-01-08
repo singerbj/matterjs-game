@@ -128,7 +128,11 @@ var joinGame = function (startServer, ipToJoin) {
                                     body.fillColor = 'green';
                                 } else if (entity.t === 'p') {
                                     body = new Paper.Path.Circle(entity.x + offsetX, entity.y + offsetY, entity.r);
-                                    body.fillColor = 'blue';
+                                    if(player && player.i === entity.i){
+                                        body.fillColor = 'blue';
+                                    }else{
+                                        body.fillColor = 'black';
+                                    }
                                 } else if (entity.t === 'g') {
                                     body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
                                     body.fillColor = 'orange';
@@ -235,20 +239,23 @@ var joinGame = function (startServer, ipToJoin) {
                 healthText.fillColor = 'black';
             }
             if (player) {
-                if (player.g) {
-                    ammoText.content = player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
-                }
-                healthText.content = Math.ceil(player.h / 10) + '% HP';
-                if (player.gr.length > 0) {
-                    groundText.content = 'Press F to pickup: ' +
-                        player.gr.map(function (item) {
-                            return item.n;
-                        }).join(', ');
-                } else {
-                    groundText.content = ''
+                if(player.h > 0){
+                    healthText.content = Math.ceil(player.h / 10) + '% HP';
+                    if (player.g) {
+                        ammoText.content = player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
+                    }
+                    if (player.gr.length > 0) {
+                        groundText.content = 'Press F to pickup: ' +
+                            player.gr.map(function (item) {
+                                return item.n;
+                            }).join(', ');
+                    } else {
+                        groundText.content = ''
+                    }
+                }else{
+                    healthText.content = 'You are dead';
                 }
             }
-
             ammoText.bringToFront();
             healthText.bringToFront();
             groundText.bringToFront();
