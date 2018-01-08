@@ -21,7 +21,7 @@ var joinInput = document.querySelector('.start-join-input');
 var hostButton = document.querySelector('.start-host');
 var menuDiv = document.querySelector('#menu');
 
-var joinGame = function(startServer, ipToJoin){
+var joinGame = function (startServer, ipToJoin) {
     require('../shared/game.js')(startServer);
 
     var bodyMap = {};
@@ -179,10 +179,17 @@ var joinGame = function(startServer, ipToJoin){
                     if (shot.hit === true) {
                         var path = new Paper.Path.Circle(new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY), 5);
                         path.opacity = 0.3;
-                        path.fillColor = 'yellow';
-                        setTimeout(function () {
-                            path.remove();
-                        }, 30);
+                        if (shot.hitEntityType === 'p') {
+                            path.fillColor = 'red';
+                            setTimeout(function () {
+                                path.remove();
+                            }, 50);
+                        } else {
+                            path.fillColor = 'yellow';
+                            setTimeout(function () {
+                                path.remove();
+                            }, 50);
+                        }
                     }
                 }
             });
@@ -229,7 +236,7 @@ var joinGame = function(startServer, ipToJoin){
             }
             if (player) {
                 if (player.g) {
-                    ammoText.content =  player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
+                    ammoText.content = player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
                 }
                 healthText.content = Math.ceil(player.h / 10) + '% HP';
                 if (player.gr.length > 0) {
@@ -339,9 +346,9 @@ var joinGame = function(startServer, ipToJoin){
 
 };
 
-joinButton.onclick = function(){
+joinButton.onclick = function () {
     joinGame(false, joinInput.value);
 };
-hostButton.onclick = function(){
+hostButton.onclick = function () {
     joinGame(true);
 };

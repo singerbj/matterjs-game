@@ -155,6 +155,21 @@ module.exports = function (startServer) {
                     } else {
                         velocity.x = 0;
                     }
+
+                    if (velocity.x !== 0 && velocity.y !== 0) {
+                        var change = Math.sqrt()
+                        if (velocity.x > 0) {
+                            velocity.x = clients[id].player.diagonalSpeed;
+                        } else {
+                            velocity.x = -clients[id].player.diagonalSpeed;
+                        }
+                        if (velocity.y > 0) {
+                            velocity.y = clients[id].player.diagonalSpeed;
+                        } else {
+                            velocity.y = -clients[id].player.diagonalSpeed;
+                        }
+                    }
+
                     Matter.Body.setVelocity(clients[id].player.matterjs, velocity);
 
                     clients[id].player.x = clients[id].player.matterjs.position.x;
@@ -177,7 +192,7 @@ module.exports = function (startServer) {
             });
         });
 
-        var mapBodies = MapBuilder.buildMap(4000, 4000);
+        var mapBodies = MapBuilder.buildMap(8000, 8000);
         mapBodies.walls.forEach(function (wall) {
             wallMap[wall.id] = wall;
             Engine.addWall(wall);

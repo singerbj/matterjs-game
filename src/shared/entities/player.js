@@ -19,7 +19,8 @@ module.exports = function (x, y) {
         y: y,
         r: r,
         health: 1000,
-        speed: 1.2,
+        speed: 1.4,
+        diagonalSpeed: 0.9899,
         moving: {
             up: false,
             down: false,
@@ -53,13 +54,6 @@ module.exports = function (x, y) {
 
                         var i, shotObj, result, shotX, shotY, k, arrayOfShots = [];
                         for (i = 0; i < this.gun.bulletsPerShot; i += 1) {
-                            //TODO: get minimum radians, the following doesnt work
-                            // while (this.aim > (2 * Math.PI)) {
-                            //     this.aim -= (2 * Math.PI);
-                            // }
-                            // console.log(this.aim);
-                            // this.aim += (Helpers.rand(-this.gun.spread, this.gun.spread) / 500);
-
                             k = (this.gun.range / (Math.sqrt(Math.pow(this.aim, 2) + 1)));
 
                             if ((playerX + this.mouse.x) < playerX) {
@@ -104,8 +98,9 @@ module.exports = function (x, y) {
                                     y: result[0].point.y,
                                 };
                                 shotObj.hit = true;
-                                shotObj.hitEntityId = result[0].body.entityId;
-                                shotObj.shooterEntityId = result[0].body.entityId;
+                                shotObj.hitEntityId = result[0].body.entity.id;
+                                shotObj.hitEntityType = result[0].body.entity.type;
+                                // shotObj.shooterEntityId = result[0].body.entityId;
                             }
                             arrayOfShots.push(shotObj);
                         }
