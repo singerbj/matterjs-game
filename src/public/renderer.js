@@ -115,8 +115,8 @@ var joinGame = function (startServer, ipToJoin) {
         var engine, render, entity, offsetX, offsetY;
         var renderObjects = function (entityMap) {
             if (player) {
-                offsetX = (canvas.width / 2) - player.x;
-                offsetY = (canvas.height / 2) - player.y;
+                offsetX = (canvas.width / (2 * window.devicePixelRatio)) - player.x;
+                offsetY = (canvas.height / (2 * window.devicePixelRatio)) - player.y;
 
                 entityMap.forEach(function (entity) {
                     if (!(entity instanceof Array)) {
@@ -227,15 +227,15 @@ var joinGame = function (startServer, ipToJoin) {
 
         var renderHud = function () {
             if (!ammoText) {
-                ammoText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height) - marginTop - 40));
+                ammoText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 40));
                 ammoText.fillColor = 'black';
             }
             if (!healthText) {
-                healthText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height) - marginTop - 20));
+                healthText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 20));
                 healthText.fillColor = 'black';
             }
             if (!groundText) {
-                groundText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height) - marginTop - 60));
+                groundText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 60));
                 healthText.fillColor = 'black';
             }
             if (player) {
@@ -295,8 +295,8 @@ var joinGame = function (startServer, ipToJoin) {
         window.Paper = Paper;
 
         canvas.onmousemove = function (e) {
-            mouseX = e.offsetX;
-            mouseY = e.offsetY;
+            mouseX = e.offsetX * window.devicePixelRatio;
+            mouseY = e.offsetY * window.devicePixelRatio;
         };
 
         // var acceptInput = true;
