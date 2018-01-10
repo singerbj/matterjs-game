@@ -132,12 +132,11 @@ module.exports = function (x, y) {
                 this.health = 0;
             }
         },
-        lastPickup: Date.now(),
+        lastPickupPutdown: Date.now(),
         handlePickup: function (itemMap, Engine) {
             var now = Date.now();
-            if(now - this.lastPickup > 250){
-                console.log('handlePickup');
-                this.lastPickup = now;
+            if(now - this.lastPickupPutdown > 500){
+                this.lastPickupPutdown = now;
                 var self = this;
                 if (this.health > 0) {
                     var groudKeys = Object.keys(this.ground);
@@ -145,6 +144,7 @@ module.exports = function (x, y) {
                         groudKeys.forEach(function (key) {
                             if (Object.keys(self.inventory).length < 2) {
                                 itemMap[key].deleted = true;
+                                Engine.removeItem(itemMap[key]);
                                 self.inventory[key] = self.ground[key];
                                 if (!self.gun && self.inventory[key].type === 'g') {
                                     self.gun = self.inventory[key];
@@ -153,18 +153,26 @@ module.exports = function (x, y) {
                         });
                     } else {
                         if(self.gun){
+                            self.gun.deleted = false;
                             delete self.inventory[self.gun.id];
+                            var body = Matter.Bodies.rectangle(self.x, self.y, self.gun.w, self.gun.h, {
+                                collisionFilter: {
+                                    mask: Helpers.collisionFilters.normal
+                                }
+                            });
+                            self.gun.matterjs = body;
+                            body.entity = self.gun;
                             self.gun.id = Helpers.getUUID();
-                            // self.gun.matterjs.position.x = self.x;
-                            // self.gun.matterjs.position.y = self.y;
-                            // self.gun.x = self.x;
-                            // self.gun.y = self.y;
-                            delete self.gun.deleted;
+
                             itemMap[self.gun.id] = self.gun;
                             Engine.addItem(itemMap[self.gun.id]);
-                            console.log(itemMap[self.gun.id]);
 
-                            self.gun = undefined;
+                            var inventoryKeys = Object.keys(self.inventory);
+                            if(inventoryKeys.length > 0){
+                                self.gun = self.inventory[inventoryKeys[0]];
+                            }else{
+                                self.gun = undefined;
+                            }
                         }
                     }
                 }
