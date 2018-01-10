@@ -47,7 +47,7 @@ module.exports = function (startServer) {
                                 } else if (key === 'D') {
                                     c.player.moving.right = (event.keys[key] === 'onkeydown');
                                 } else if (key === 'F' && event.keys[key] === 'onkeydown') {
-                                    c.player.handlePickup(itemMap);
+                                    c.player.handlePickup(itemMap, Engine);
                                 } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
                                     c.player.reloading = true;
                                     reloads.push({

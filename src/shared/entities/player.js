@@ -132,18 +132,42 @@ module.exports = function (x, y) {
                 this.health = 0;
             }
         },
-        handlePickup: function (itemMap) {
-            var self = this;
-            if (this.health > 0) {
-                Object.keys(this.ground).forEach(function (key) {
-                    if (Object.keys(self.inventory).length < 2) {
-                        itemMap[key].deleted = true;
-                        self.inventory[key] = self.ground[key];
-                        if (!self.gun && self.inventory[key].type === 'g') {
-                            self.gun = self.inventory[key];
+        lastPickup: Date.now(),
+        handlePickup: function (itemMap, Engine) {
+            var now = Date.now();
+            if(now - this.lastPickup > 250){
+                console.log('handlePickup');
+                this.lastPickup = now;
+                var self = this;
+                if (this.health > 0) {
+                    var groudKeys = Object.keys(this.ground);
+                    if(groudKeys.length > 0){
+                        groudKeys.forEach(function (key) {
+                            if (Object.keys(self.inventory).length < 2) {
+                                itemMap[key].deleted = true;
+                                self.inventory[key] = self.ground[key];
+                                if (!self.gun && self.inventory[key].type === 'g') {
+                                    self.gun = self.inventory[key];
+                                }
+                            }
+                        });
+                    } else {
+                        if(self.gun){
+                            delete self.inventory[self.gun.id];
+                            self.gun.id = Helpers.getUUID();
+                            // self.gun.matterjs.position.x = self.x;
+                            // self.gun.matterjs.position.y = self.y;
+                            // self.gun.x = self.x;
+                            // self.gun.y = self.y;
+                            delete self.gun.deleted;
+                            itemMap[self.gun.id] = self.gun;
+                            Engine.addItem(itemMap[self.gun.id]);
+                            console.log(itemMap[self.gun.id]);
+
+                            self.gun = undefined;
                         }
                     }
-                });
+                }
             }
         },
         switchWeapon: function (key) {

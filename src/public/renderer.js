@@ -92,9 +92,9 @@ var joinGame = function (name, startServer, ipToJoin) {
                 playersList.innerHTML = '';
                 if (parsedData.playerArray) {
                     parsedData.playerArray.forEach(function (player) {
-                        var li = document.createElement('li');
-                        li.innerText = player.n;
-                        playersList.appendChild(li);
+                        var div = document.createElement('div');
+                        div.innerText = player.n;
+                        playersList.appendChild(div);
                     });
                 }
             }
@@ -270,6 +270,8 @@ var joinGame = function (name, startServer, ipToJoin) {
                     healthText.content = Math.ceil(player.h / 10) + '% HP';
                     if (player.g) {
                         ammoText.content = player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
+                    }else{
+                        ammoText.content = '';
                     }
                     if (player.gr.length > 0) {
                         groundText.content = 'Press F to pickup: ' +
@@ -388,12 +390,14 @@ joinButton.onclick = function () {
     startButton.style.display = 'none';
     lobbyDiv.style.display = 'block';
     window.localStorage.setItem('join', joinInput.value);
+    window.localStorage.setItem('name', nameInput.value);
     joinGame(nameInput.value, false, joinInput.value);
 };
 hostButton.onclick = function () {
     hosting = true;
     startButton.style.display = 'inline-block';
     lobbyDiv.style.display = 'block';
+    window.localStorage.setItem('name', nameInput.value);
     joinGame(nameInput.value, hosting);
 };
 nameInput.value = window.localStorage.getItem('name') || 'player' + Helpers.rand(100, 999);

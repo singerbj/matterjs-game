@@ -5,23 +5,26 @@
     <style>
     </style>
   </head>
-  <body style="background: black; overflow: hidden;">
+  <body style="background: black; overflow: hidden; margin: 0;">
     <div id="menu" style="background: #38e; position: absolute; width: 100%; height: 100%; text-align: center;">
+        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <h1>That Game Where You Loot and the Last One Wins</h1>
         <h3>Enter Your Name:</h3>
         <input class="name-input" type="text" value="Player"/>
         <h3>Join a Game:</h3>
         <input class="start-join-input" type="text" value="127.0.0.1"/>
         <button class="start-join">Join</button>
-        <hr>
-        <br>
-        <button class="start-host">Host a Game</button>
+        <h3>Host a Game:</h3>
+        <button class="start-host">Host</button>
     </div>
     <div id="lobby" style="display: none; background: #38e; position: absolute; width: 100%; height: 100%; text-align: center;">
-      <br>
-      <br>
+      <br><br><br><br><br><br><br><br><br><br><br>
       <button class="start-game">Start Game</button>
-      <ul class="players">
-      </ul>
+      <br>
+      <br>
+      <h3>Players:</h3>
+      <div class="players">
+      </div>
     </div>
     <canvas id="canvas" width="1920px" height="1080px" style="background: #eee;"></canvas>
     <script>
