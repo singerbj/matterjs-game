@@ -29,6 +29,10 @@ var hosting = false;
 var gameStarted = false;
 
 var joinGame = function (name, startServer, ipToJoin) {
+
+    // Paper.project.importSVG('../svg/guns.svg', function (a, b, c) {
+    //     console.log(a, b, c);
+    // });
     var server = require('../shared/game.js')(startServer);
 
     var bodyMap = {};
@@ -270,7 +274,7 @@ var joinGame = function (name, startServer, ipToJoin) {
                     healthText.content = Math.ceil(player.h / 10) + '% HP';
                     if (player.g) {
                         ammoText.content = player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
-                    }else{
+                    } else {
                         ammoText.content = '';
                     }
                     if (player.gr.length > 0) {
