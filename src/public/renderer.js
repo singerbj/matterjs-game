@@ -85,7 +85,6 @@ var joinGame = function (name, startServer, ipToJoin) {
 
         client.on('message', function (data) {
             parsedData = JSON.parse(data);
-            console.log(gameStarted, parsedData.gameStarted);
             if (parsedData.gameStarted === true) {
                 gameStarted = true;
                 lobbyDiv.style.display = 'none';
