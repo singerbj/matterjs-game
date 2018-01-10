@@ -15,6 +15,7 @@ module.exports = function (x, y) {
     var entity = {
         id: entityId,
         type: type,
+        name: '',
         x: x,
         y: y,
         r: r,
@@ -46,7 +47,7 @@ module.exports = function (x, y) {
             var time = Date.now();
             var playerX = this.x;
             var playerY = this.y;
-            if(this.health > 0){
+            if (this.health > 0) {
                 if (this.gun) {
                     if (!this.reloading) {
                         if (this.firing && this.gun.ammo > 0 && (!this.lastShot || (time - this.lastShot) >= this.gun.fireRate)) {
@@ -127,13 +128,13 @@ module.exports = function (x, y) {
         },
         handleHit: function (shot) {
             this.health -= shot.damage;
-            if(this.health < 0){
+            if (this.health < 0) {
                 this.health = 0;
             }
         },
         handlePickup: function (itemMap) {
             var self = this;
-            if(this.health > 0){
+            if (this.health > 0) {
                 Object.keys(this.ground).forEach(function (key) {
                     if (Object.keys(self.inventory).length < 2) {
                         itemMap[key].deleted = true;
@@ -165,7 +166,8 @@ module.exports = function (x, y) {
                 re: this.reloaded,
                 h: this.health,
                 in: Helpers.serializeMap(this.inventory),
-                gr: Helpers.serializeMap(this.ground)
+                gr: Helpers.serializeMap(this.ground),
+                n: this.name
             }
         }
     };

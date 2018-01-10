@@ -5,24 +5,31 @@ const Decoder = new TextDecoder("utf-8");
 const Paper = require('paper');
 const Howler = require('howler');
 const remote = require('electron').remote;
+const Helpers = require('../shared/helpers');
 
 //Load sounds
 var gunShotSound = new Howl({
     src: ['../audio/gunshot.wav'],
-    volume: 0.3
+    volume: 0.03
 });
 var reloadSound = new Howl({
     src: ['../audio/reload.mp3'],
-    volume: 0.5
+    volume: 0.05
 });
 
+var nameInput = document.querySelector('.name-input');
 var joinButton = document.querySelector('.start-join');
 var joinInput = document.querySelector('.start-join-input');
 var hostButton = document.querySelector('.start-host');
 var menuDiv = document.querySelector('#menu');
+var lobbyDiv = document.querySelector('#lobby');
+var startButton = document.querySelector('.start-game');
+var playersList = document.querySelector('.players');
+var hosting = false;
+var gameStarted = false;
 
-var joinGame = function (startServer, ipToJoin) {
-    require('../shared/game.js')(startServer);
+var joinGame = function (name, startServer, ipToJoin) {
+    var server = require('../shared/game.js')(startServer);
 
     var bodyMap = {};
     var shotMap = {};
@@ -78,6 +85,20 @@ var joinGame = function (startServer, ipToJoin) {
 
         client.on('message', function (data) {
             parsedData = JSON.parse(data);
+            console.log(gameStarted, parsedData.gameStarted);
+            if (parsedData.gameStarted === true) {
+                gameStarted = true;
+                lobbyDiv.style.display = 'none';
+            } else {
+                playersList.innerHTML = '';
+                if (parsedData.playerArray) {
+                    parsedData.playerArray.forEach(function (player) {
+                        var li = document.createElement('li');
+                        li.innerText = player.n;
+                        playersList.appendChild(li);
+                    });
+                }
+            }
             if (parsedData.playerArray) {
                 playerArray = parsedData.playerArray;
             }
@@ -128,9 +149,9 @@ var joinGame = function (startServer, ipToJoin) {
                                     body.fillColor = 'green';
                                 } else if (entity.t === 'p') {
                                     body = new Paper.Path.Circle(entity.x + offsetX, entity.y + offsetY, entity.r);
-                                    if(player && player.i === entity.i){
+                                    if (player && player.i === entity.i) {
                                         body.fillColor = 'blue';
-                                    }else{
+                                    } else {
                                         body.fillColor = 'black';
                                     }
                                 } else if (entity.t === 'g') {
@@ -213,6 +234,13 @@ var joinGame = function (startServer, ipToJoin) {
                 }
             });
 
+            startButton.onclick = function () {
+                if (hosting) {
+                    console.log('starting game!');
+                    gameStarted = true;
+                }
+            };
+
         };
 
         var renderFps = function () {
@@ -239,7 +267,7 @@ var joinGame = function (startServer, ipToJoin) {
                 healthText.fillColor = 'black';
             }
             if (player) {
-                if(player.h > 0){
+                if (player.h > 0) {
                     healthText.content = Math.ceil(player.h / 10) + '% HP';
                     if (player.g) {
                         ammoText.content = player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
@@ -252,7 +280,7 @@ var joinGame = function (startServer, ipToJoin) {
                     } else {
                         groundText.content = ''
                     }
-                }else{
+                } else {
                     healthText.content = 'You are dead';
                 }
             }
@@ -284,7 +312,9 @@ var joinGame = function (startServer, ipToJoin) {
                     type: 'mouse',
                     x: mouseX - (canvas.width / 2),
                     y: mouseY - (canvas.height / 2),
-                    keys: keys
+                    keys: keys,
+                    start: hosting && gameStarted,
+                    name: name
                 }));
             }
 
@@ -351,11 +381,22 @@ var joinGame = function (startServer, ipToJoin) {
         window.location.reload();
     });
 
+
 };
 
 joinButton.onclick = function () {
-    joinGame(false, joinInput.value);
+    hosting = false;
+    startButton.style.display = 'none';
+    lobbyDiv.style.display = 'block';
+    window.localStorage.setItem('join', joinInput.value);
+    joinGame(nameInput.value, false, joinInput.value);
 };
 hostButton.onclick = function () {
-    joinGame(true);
+    hosting = true;
+    startButton.style.display = 'inline-block';
+    lobbyDiv.style.display = 'block';
+    joinGame(nameInput.value, hosting);
 };
+nameInput.value = window.localStorage.getItem('name') || 'player' + Helpers.rand(100, 999);
+var lastJoined = window.localStorage.getItem('join') || '127.0.0.1';
+joinInput.value = lastJoined;
