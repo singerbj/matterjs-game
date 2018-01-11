@@ -1,5 +1,5 @@
-const Wall = require('./entities/wall');
-const Helpers = require('./helpers');
+var Wall = require('./entities/wall');
+var Helpers = require('./helpers');
 
 module.exports = {
     generate: function (tileSize, wallWidth) {

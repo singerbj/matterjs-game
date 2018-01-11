@@ -1,16 +1,16 @@
-const WebSocket = require('ws');
-const Matter = require('matter-js/build/matter.js');
-const raf = require('raf');
-const Paper = require('paper');
-const Howler = require('howler');
-const remote = require('electron').remote;
-const Helpers = require('../shared/helpers');
+var WebSocket = require('ws');
+var Matter = require('matter-js/build/matter.js');
+var raf = require('raf');
+var Paper = require('paper');
+var Howler = require('howler');
+var remote = require('electron').remote;
+var Helpers = require('../shared/helpers');
 
 var createNewClient = function (ipToJoin) {
     var keys = {};
     var mouseX = 0,
         mouseY = 0;
-    const client = new WebSocket('ws://' + (ipToJoin !== undefined ? ipToJoin : '127.0.0.1') + ':6574');
+    var client = new WebSocket('ws://' + (ipToJoin !== undefined ? ipToJoin : '127.0.0.1') + ':6574');
     client.on('open', function () {
         console.log('Connected');
 

@@ -1,13 +1,13 @@
-const Player = require('./entities/player');
-const Wall = require('./entities/wall');
-const Helpers = require('./helpers');
-const MapBuilder = require('./mapbuilder');
-const WebSocket = require('ws');
-const Decoder = new TextDecoder("utf-8");
-const Matter = require('matter-js/build/matter.js');
+var Player = require('./entities/player');
+var Wall = require('./entities/wall');
+var Helpers = require('./helpers');
+var MapBuilder = require('./mapbuilder');
+var WebSocket = require('ws');
+var Decoder = new TextDecoder("utf-8");
+var Matter = require('matter-js/build/matter.js');
 
 
-module.exports = function (startServer) {
+module.exports = function (startServer, ipToJoin) {
     var playerMap = {};
     var wallMap = {};
     var itemMap = {};
@@ -17,6 +17,8 @@ module.exports = function (startServer) {
     var mapSize = 4000;
     var gameStarted = false;
     var fps;
+    var client;
+    var player;
 
 
     var velocity = {
@@ -25,120 +27,125 @@ module.exports = function (startServer) {
     };
     var shots = [];
     var Engine = require('./engine')(function (engine, fps) {
-        //Add promise to these loops
-        shots = [];
-        var arrayOfShots,
-            shot, hitEntity;
-        Object.keys(playerMap).forEach(function (id) {
-            playerMap[id].x = playerMap[id].matterjs.position.x;
-            playerMap[id].y = playerMap[id].matterjs.position.y;
-            playerMap[id].ground = {};
+        if (startServer) {
+            //Add promise to these loops
+            shots = [];
+            var arrayOfShots,
+                shot, hitEntity;
+            Object.keys(playerMap).forEach(function (id) {
+                playerMap[id].x = playerMap[id].matterjs.position.x;
+                playerMap[id].y = playerMap[id].matterjs.position.y;
+                playerMap[id].ground = {};
 
-            arrayOfShots = playerMap[id].handleFiring(engine);
-            if (arrayOfShots) {
-                arrayOfShots.forEach(function (shot) {
-                    if (shot.hitEntityId) {
-                        if (playerMap[shot.hitEntityId]) {
-                            hitEntity = playerMap[shot.hitEntityId];
-                        } else if (wallMap[shot.hitEntityId]) {
-                            hitEntity = wallMap[shot.hitEntityId];
+                arrayOfShots = playerMap[id].handleFiring(engine);
+                if (arrayOfShots) {
+                    arrayOfShots.forEach(function (shot) {
+                        if (shot.hitEntityId) {
+                            if (playerMap[shot.hitEntityId]) {
+                                hitEntity = playerMap[shot.hitEntityId];
+                            } else if (wallMap[shot.hitEntityId]) {
+                                hitEntity = wallMap[shot.hitEntityId];
+                            }
+                            if (hitEntity && hitEntity.handleHit) {
+                                hitEntity.handleHit(shot);
+                            }
                         }
-                        if (hitEntity && hitEntity.handleHit) {
-                            hitEntity.handleHit(shot);
+                        shots.push(shot);
+                    });
+                }
+
+            });
+
+            Object.keys(wallMap).forEach(function (id) {
+                wallMap[id].x = wallMap[id].matterjs.position.x;
+                wallMap[id].y = wallMap[id].matterjs.position.y;
+            });
+
+            Object.keys(itemMap).forEach(function (id) {
+                if (!itemMap[id].deleted) {
+                    itemMap[id].x = itemMap[id].matterjs.position.x;
+                    itemMap[id].y = itemMap[id].matterjs.position.y;
+                } else {
+                    toDelete.push(id);
+                    Engine.removeItem(itemMap[id]);
+                    delete itemMap[id];
+                }
+            });
+
+
+            Object.keys(playerMap).forEach(function (id) {
+                var currentPlayer = playerMap[id];
+                if (currentPlayer && currentPlayer.health > 0) {
+                    if (currentPlayer.moving.up && !currentPlayer.moving.down) {
+                        velocity.y = -currentPlayer.speed;
+                    } else if (!currentPlayer.moving.up && currentPlayer.moving.down) {
+                        velocity.y = currentPlayer.speed;
+                    } else {
+                        velocity.y = 0;
+                    }
+
+                    if (currentPlayer.moving.left && !currentPlayer.moving.right) {
+                        velocity.x = -currentPlayer.speed;
+                    } else if (!currentPlayer.moving.left && currentPlayer.moving.right) {
+                        velocity.x = currentPlayer.speed;
+                    } else {
+                        velocity.x = 0;
+                    }
+
+                    if (velocity.x !== 0 && velocity.y !== 0) {
+                        var change = Math.sqrt()
+                        if (velocity.x > 0) {
+                            velocity.x = currentPlayer.diagonalSpeed;
+                        } else {
+                            velocity.x = -currentPlayer.diagonalSpeed;
+                        }
+                        if (velocity.y > 0) {
+                            velocity.y = currentPlayer.diagonalSpeed;
+                        } else {
+                            velocity.y = -currentPlayer.diagonalSpeed;
                         }
                     }
-                    shots.push(shot);
-                });
-            }
 
-        });
+                    Matter.Body.setVelocity(currentPlayer.matterjs, velocity);
 
-        Object.keys(wallMap).forEach(function (id) {
-            wallMap[id].x = wallMap[id].matterjs.position.x;
-            wallMap[id].y = wallMap[id].matterjs.position.y;
-        });
-
-        Object.keys(itemMap).forEach(function (id) {
-            if (!itemMap[id].deleted) {
-                itemMap[id].x = itemMap[id].matterjs.position.x;
-                itemMap[id].y = itemMap[id].matterjs.position.y;
-            } else {
-                toDelete.push(id);
-                Engine.removeItem(itemMap[id]);
-                delete itemMap[id];
-            }
-        });
-
-
-        Object.keys(playerMap).forEach(function (id) {
-            var currentPlayer = playerMap[id];
-            if (currentPlayer && currentPlayer.health > 0) {
-                if (currentPlayer.moving.up && !currentPlayer.moving.down) {
-                    velocity.y = -currentPlayer.speed;
-                } else if (!currentPlayer.moving.up && currentPlayer.moving.down) {
-                    velocity.y = currentPlayer.speed;
-                } else {
-                    velocity.y = 0;
+                    currentPlayer.x = currentPlayer.matterjs.position.x;
+                    currentPlayer.y = currentPlayer.matterjs.position.y;
+                } else if (playerMap[currentPlayer.id] && currentPlayer.health === 0) {
+                    toDelete.push(currentPlayer.id);
+                    Engine.removePlayer(playerMap[currentPlayer.id]);
+                    delete playerMap[currentPlayer.id];
+                    // delete currentPlayer;
                 }
-
-                if (currentPlayer.moving.left && !currentPlayer.moving.right) {
-                    velocity.x = -currentPlayer.speed;
-                } else if (!currentPlayer.moving.left && currentPlayer.moving.right) {
-                    velocity.x = currentPlayer.speed;
-                } else {
-                    velocity.x = 0;
-                }
-
-                if (velocity.x !== 0 && velocity.y !== 0) {
-                    var change = Math.sqrt()
-                    if (velocity.x > 0) {
-                        velocity.x = currentPlayer.diagonalSpeed;
-                    } else {
-                        velocity.x = -currentPlayer.diagonalSpeed;
-                    }
-                    if (velocity.y > 0) {
-                        velocity.y = currentPlayer.diagonalSpeed;
-                    } else {
-                        velocity.y = -currentPlayer.diagonalSpeed;
-                    }
-                }
-
-                Matter.Body.setVelocity(currentPlayer.matterjs, velocity);
-
-                currentPlayer.x = currentPlayer.matterjs.position.x;
-                currentPlayer.y = currentPlayer.matterjs.position.y;
-            } else if (playerMap[currentPlayer.id] && currentPlayer.health === 0) {
-                toDelete.push(currentPlayer.id);
-                Engine.removePlayer(playerMap[currentPlayer.id]);
-                delete playerMap[currentPlayer.id];
-                // delete currentPlayer;
-            }
-        });
+            });
+        }
     }, function (engine, engineFps) {
-        fps = engineFps;
-        Object.keys(clients).forEach(function (id) {
-            clients[id].send(JSON.stringify({
-                playerMap: Helpers.serializeMap(playerMap),
-                wallMap: Helpers.serializeMap(wallMap),
-                itemMap: Helpers.serializeMap(itemMap),
-                toDelete: toDelete,
-                player: clients[id].player ? clients[id].player.serialize() : undefined,
-                shots: shots,
-                fps: fps,
-                reloads: reloads,
-                gameStarted: gameStarted
-            }));
-            reloads = [];
-        });
+        if (startServer) {
+            fps = engineFps;
+            Object.keys(clients).forEach(function (id) {
+                clients[id].send(JSON.stringify({
+                    playerMap: Helpers.serializeMap(playerMap),
+                    wallMap: Helpers.serializeMap(wallMap),
+                    itemMap: Helpers.serializeMap(itemMap),
+                    toDelete: toDelete,
+                    player: clients[id].player ? clients[id].player.serialize() : undefined,
+                    shots: shots,
+                    fps: fps,
+                    reloads: reloads,
+                    gameStarted: gameStarted
+                }));
+                reloads = [];
+            });
+        }
     });
 
-    var hostPlayer = new Player(Helpers.rand(-(mapSize / 2) + 100, (mapSize / 2) - 100), Helpers.rand(-(mapSize / 2) + 100, (mapSize / 2) - 100));
-    playerMap[hostPlayer.id] = hostPlayer;
-    Engine.addPlayer(hostPlayer);
+    player = new Player(Helpers.rand(-(mapSize / 2) + 100, (mapSize / 2) - 100), Helpers.rand(-(mapSize / 2) + 100, (mapSize / 2) - 100));
+    playerMap[player.id] = player;
+    Engine.addPlayer(player);
 
-    var handleMessage = function(data, c){
-        var currentPlayer = c ? c.player : hostPlayer;
+    var handleMessage = function (data, c) {
+        var currentPlayer = c ? c.player : player;
         event = JSON.parse(data);
+
         if (gameStarted && currentPlayer) {
             if (event.keys) {
                 Matter.Sleeping.set(currentPlayer.matterjs, false);
@@ -231,44 +238,87 @@ module.exports = function (startServer) {
             itemMap[item.id] = item;
             Engine.addItem(item);
         });
-    };
+    } else {
+        client = new WebSocket('ws://' + (ipToJoin !== undefined ? ipToJoin : '127.0.0.1') + ':6574');
+        client.on('error', function () {
+            alert("Error connecting to: " + ipToJoin);
+            window.location.reload();
+        });
+        client.on('open', function () {
+            console.log('Connected');
+
+            client.on('message', function (data) {
+                parsedData = JSON.parse(data);
+                if (parsedData.gameStarted === true) {
+                    gameStarted = true;
+                }
+                if (parsedData.playerMap) {
+                    playerMap = parsedData.playerMap;
+                }
+                if (parsedData.wallMap) {
+                    wallMap = parsedData.wallMap;
+                }
+                if (parsedData.itemMap) {
+                    itemMap = parsedData.itemMap;
+                }
+                if (parsedData.toDelete) {
+                    toDelete = parsedData.toDelete;
+                }
+                if (parsedData.player) {
+                    player = parsedData.player;
+                }
+                if (parsedData.shots) {
+                    shots = parsedData.shots;
+                }
+                if (parsedData.fps) {
+                    fps = parsedData.fps;
+                }
+            });
+
+            client.on('close', function () {
+                console.log('Connection closed');
+            });
+        });
+    }
 
     return {
-        getPlayerMap: function(){
+        getPlayerMap: function () {
             return Helpers.serializeMap(playerMap);
         },
-        getWallMap: function(){
+        getWallMap: function () {
             return Helpers.serializeMap(wallMap);
         },
-        getItemMap: function(){
+        getItemMap: function () {
             return Helpers.serializeMap(itemMap);
         },
-        getToDelete: function(){
+        getToDelete: function () {
             return toDelete;
         },
-        getPlayer: function(){
-            return hostPlayer.serialize();
+        getPlayer: function () {
+            return player.serialize ? player.serialize() : player;
         },
-        getShots: function(){
+        getShots: function () {
             return shots;
         },
-        getFps: function(){
-            return fps;
+        getFps: function () {
+            return fps || -1;
         },
-        getReloads: function(){
+        getReloads: function () {
             return reloads;
         },
-        getGameStarted: function(){
+        getGameStarted: function () {
             return gameStarted;
         },
-        startGame: function(){
+        startGame: function () {
             gameStarted = true;
         },
-        sendEvent: function(event){
-            if(startServer){
+        sendEvent: function (event) {
+            if (startServer) {
                 handleMessage(JSON.stringify(event));
-            }else{
-                //TODO: send it over networking
+            } else {
+                if (client && client.readyState === 1) {
+                    client.send(JSON.stringify(event))
+                }
             }
         }
     };

@@ -1,6 +1,6 @@
-const Matter = require('matter-js/build/matter.js');
-const Helpers = require('../helpers');
-const Raycast = require('../raycast');
+var Matter = require('matter-js/build/matter.js');
+var Helpers = require('../helpers');
+var Raycast = require('../raycast');
 
 module.exports = function (x, y) {
     var r = 8;
@@ -135,7 +135,7 @@ module.exports = function (x, y) {
         lastPickupPutdown: Date.now(),
         handlePickup: function (itemMap, Engine) {
             var now = Date.now();
-            if(now - this.lastPickupPutdown > 500){
+            if (now - this.lastPickupPutdown > 500) {
                 this.lastPickupPutdown = now;
                 this.reloadStart = undefined;
                 this.reloaded = 0;
@@ -143,7 +143,7 @@ module.exports = function (x, y) {
                 var self = this;
                 if (this.health > 0) {
                     var groudKeys = Object.keys(this.ground);
-                    if(groudKeys.length > 0){
+                    if (groudKeys.length > 0) {
                         groudKeys.forEach(function (key) {
                             if (Object.keys(self.inventory).length < 2) {
                                 itemMap[key].deleted = true;
@@ -155,7 +155,7 @@ module.exports = function (x, y) {
                             }
                         });
                     } else {
-                        if(self.gun){
+                        if (self.gun) {
                             self.gun.deleted = false;
                             delete self.inventory[self.gun.id];
                             var body = Matter.Bodies.rectangle(self.x, self.y, self.gun.w, self.gun.h, {
@@ -171,9 +171,9 @@ module.exports = function (x, y) {
                             Engine.addItem(itemMap[self.gun.id]);
 
                             var inventoryKeys = Object.keys(self.inventory);
-                            if(inventoryKeys.length > 0){
+                            if (inventoryKeys.length > 0) {
                                 self.gun = self.inventory[inventoryKeys[0]];
-                            }else{
+                            } else {
                                 self.gun = undefined;
                             }
                         }

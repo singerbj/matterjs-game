@@ -1,6 +1,6 @@
-const Tiles = require('./tiles');
-const Wall = require('./entities/wall');
-const Helpers = require('./helpers');
+var Tiles = require('./tiles');
+var Wall = require('./entities/wall');
+var Helpers = require('./helpers');
 
 var possibleItems = [
     require('./entities/items/guns/lmg'),

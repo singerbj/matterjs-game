@@ -1,4 +1,4 @@
-const uuidv4 = require('uuid/v4');
+var uuidv4 = require('uuid/v4');
 
 module.exports = {
     getUUID: function () {

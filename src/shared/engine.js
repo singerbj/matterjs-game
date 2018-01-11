@@ -1,7 +1,7 @@
 var Matter = require('matter-js/build/matter.js');
-const raf = require('raf');
-const Player = require('./entities/player');
-const Helpers = require('./helpers');
+var raf = require('raf');
+var Player = require('./entities/player');
+var Helpers = require('./helpers');
 
 module.exports = function (beforeCallback, afterCallback) {
     var engine, render;
@@ -67,10 +67,10 @@ module.exports = function (beforeCallback, afterCallback) {
         //     world.getBodyById(playerId);
         // },
         removePlayer: function (player) {
-            if(player && player.matterjs){
+            if (player && player.matterjs) {
                 Matter.Composite.remove(engine.world, player.matterjs);
                 console.log('player removed');
-            }else{
+            } else {
                 console.log('player already deleted');
             }
         },

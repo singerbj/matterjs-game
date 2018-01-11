@@ -1,5 +1,5 @@
-const Matter = require('matter-js/build/matter.js');
-const Helpers = require('../../../helpers');
+var Matter = require('matter-js/build/matter.js');
+var Helpers = require('../../../helpers');
 
 module.exports = function (x, y) {
     var width = 10;

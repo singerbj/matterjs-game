@@ -1,4 +1,4 @@
-const remote = require('electron').remote;
+var remote = require('electron').remote;
 
 module.exports = function (sendEvent) {
     // window.onmousedown = function (event) {
