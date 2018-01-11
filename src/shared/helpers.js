@@ -5,6 +5,17 @@ module.exports = {
         return uuidv4();
     },
     serializeMap: function (obj) {
+        var newMap = {};
+        Object.keys(obj).map(function (id) {
+            if (obj[id].serialize) {
+                newMap[id] = obj[id].serialize();
+            } else {
+                newMap[id] = obj[id];
+            }
+        });
+        return newMap;
+    },
+    serializeMapToArray: function (obj) {
         return Object.keys(obj).map(function (id) {
             if (id[0] !== '_') {
                 return obj[id].serialize();

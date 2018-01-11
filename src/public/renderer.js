@@ -26,7 +26,6 @@ var lobbyDiv = document.querySelector('#lobby');
 var startButton = document.querySelector('.start-game');
 var playersList = document.querySelector('.players');
 var hosting = false;
-var gameStarted = false;
 
 var joinGame = function (name, startServer, ipToJoin) {
 
@@ -37,15 +36,9 @@ var joinGame = function (name, startServer, ipToJoin) {
 
     var bodyMap = {};
     var shotMap = {};
-    var playerArray = [];
-    var wallArray = [];
-    var itemArray = [];
-    var toDelete = [];
-    var shots = [];
     var keys = {};
     var reloadPlaying = false;
-    var fps = -1;
-    var player, decodedDataList, parsedData, mouseX = 0,
+    var decodedDataList, parsedData, mouseX = 0,
         mouseY = 0;
     var canvas = document.querySelector('#canvas');
     var canvasWidth = 1920;
@@ -82,316 +75,264 @@ var joinGame = function (name, startServer, ipToJoin) {
         centerCanvas();
     };
 
-    const client = new WebSocket('ws://' + (ipToJoin !== undefined ? ipToJoin : '127.0.0.1') + ':6574');
-    client.on('open', function () {
-        menuDiv.style.display = 'none';
-        console.log('Connected');
 
-        client.on('message', function (data) {
-            parsedData = JSON.parse(data);
-            if (parsedData.gameStarted === true) {
-                gameStarted = true;
-                lobbyDiv.style.display = 'none';
-            } else {
-                playersList.innerHTML = '';
-                if (parsedData.playerArray) {
-                    parsedData.playerArray.forEach(function (player) {
-                        var div = document.createElement('div');
-                        div.innerText = player.n;
-                        playersList.appendChild(div);
-                    });
-                }
-            }
-            if (parsedData.playerArray) {
-                playerArray = parsedData.playerArray;
-            }
-            if (parsedData.wallArray) {
-                wallArray = parsedData.wallArray;
-            }
-            if (parsedData.itemArray) {
-                itemArray = parsedData.itemArray;
-            }
-            if (parsedData.toDelete) {
-                toDelete = parsedData.toDelete;
-            }
-            if (parsedData.player) {
-                player = parsedData.player;
-            }
-            if (parsedData.shots) {
-                shots = parsedData.shots;
-            }
-            if (parsedData.fps) {
-                fps = parsedData.fps;
-            }
-        });
+    var engine, render, entity, offsetX, offsetY;
+    var renderObjects = function (entityMap) {
+        if (server.getPlayer()) {
+            offsetX = (canvas.width / (2 * window.devicePixelRatio)) - server.getPlayer().x;
+            offsetY = (canvas.height / (2 * window.devicePixelRatio)) - server.getPlayer().y;
 
-        client.on('close', function () {
-            console.log('Connection closed');
-        });
-
-        var sendEvent = function (event) {
-            client.send(JSON.stringify(event));
-        };
-
-        var engine, render, entity, offsetX, offsetY;
-        var renderObjects = function (entityMap) {
-            if (player) {
-                offsetX = (canvas.width / (2 * window.devicePixelRatio)) - player.x;
-                offsetY = (canvas.height / (2 * window.devicePixelRatio)) - player.y;
-
-                entityMap.forEach(function (entity) {
-                    if (!(entity instanceof Array)) {
-                        if (entity.deleted !== true) {
-                            if (!bodyMap[entity.i]) {
-                                var body;
-                                if (entity.t === 'w') {
-                                    body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
-                                    body.fillColor = 'green';
-                                } else if (entity.t === 'p') {
-                                    body = new Paper.Path.Circle(entity.x + offsetX, entity.y + offsetY, entity.r);
-                                    if (player && player.i === entity.i) {
-                                        body.fillColor = 'blue';
-                                    } else {
-                                        body.fillColor = 'black';
-                                    }
-                                } else if (entity.t === 'g') {
-                                    body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
-                                    body.fillColor = 'orange';
-                                    body.sendToBack();
+            // entityMap.forEach(function (entity) {
+            Object.keys(entityMap).forEach(function (key) {
+                entity = entityMap[key];
+                if (!(entity instanceof Array)) {
+                    if (entity.deleted !== true) {
+                        if (!bodyMap[entity.i]) {
+                            var body;
+                            if (entity.t === 'w') {
+                                body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                                body.fillColor = 'green';
+                            } else if (entity.t === 'p') {
+                                body = new Paper.Path.Circle(entity.x + offsetX, entity.y + offsetY, entity.r);
+                                if (server.getPlayer() && server.getPlayer().i === entity.i) {
+                                    body.fillColor = 'blue';
+                                } else {
+                                    body.fillColor = 'black';
                                 }
-                                body.applyMatrix = false;
-                                bodyMap[entity.i] = body;
-                            } else {
-                                bodyMap[entity.i].position = new Point(entity.x + offsetX, entity.y + offsetY);
+                            } else if (entity.t === 'g') {
+                                body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                                body.fillColor = 'orange';
+                                body.sendToBack();
                             }
-
-                            if (entity.a) {
-                                bodyMap[entity.i].rotate((entity.a * 180 / Math.PI) - (bodyMap[entity.i].rotation));
-                            }
+                            body.applyMatrix = false;
+                            bodyMap[entity.i] = body;
                         } else {
-                            bodyMap[entity.i].remove();
+                            bodyMap[entity.i].position = new Point(entity.x + offsetX, entity.y + offsetY);
                         }
-                    }
-                });
-            }
 
-        };
-
-        var deleteObjects = function (objectIdArray) {
-            if (objectIdArray.forEach) {
-                objectIdArray.forEach(function (id) {
-                    if (bodyMap[id]) {
-                        bodyMap[id].remove();
-                        delete bodyMap[id];
-                    }
-                });
-            }
-        };
-
-        var renderShots = function () {
-            if (shots.length > 0) {
-                gunShotSound.play();
-            }
-            shots.forEach(function (shot) {
-                if (shot && !shotMap[shot.id]) {
-                    shotMap[shot.id] = shot;
-                    shotMap[shot.id].path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
-                    shotMap[shot.id].path.sendToBack();
-                    shotMap[shot.id].path.strokeWidth = 1.5;
-                    shotMap[shot.id].path.opacity = 0.2;
-                    shotMap[shot.id].path.strokeColor = 'black';
-
-                    if (shot.hit === true) {
-                        var path = new Paper.Path.Circle(new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY), 5);
-                        path.opacity = 0.3;
-                        if (shot.hitEntityType === 'p') {
-                            path.fillColor = 'red';
-                            setTimeout(function () {
-                                path.remove();
-                            }, 50);
-                        } else {
-                            path.fillColor = 'yellow';
-                            setTimeout(function () {
-                                path.remove();
-                            }, 50);
+                        if (entity.a) {
+                            bodyMap[entity.i].rotate((entity.a * 180 / Math.PI) - (bodyMap[entity.i].rotation));
                         }
+                    } else {
+                        bodyMap[entity.i].remove();
                     }
                 }
             });
-            var shot, previousOpacity, previousStrokeWidth;
-            Object.keys(shotMap).forEach(function (key) {
-                previousOpacity = shotMap[key].path.opacity;
-                previousStrokeWidth = shotMap[key].path.strokeWidth;
-                shotMap[key].path.remove();
-                if (previousOpacity > 0.01) {
-                    shotMap[key].path = new Paper.Path.Line(new Paper.Point(shotMap[key].start.x + offsetX, shotMap[key].start.y + offsetY), new Paper.Point(shotMap[key].end.x + offsetX, shotMap[key].end.y + offsetY));
-                    shotMap[key].path.sendToBack();
-                    shotMap[key].path.strokeWidth = previousStrokeWidth + 0.1;
-                    shotMap[key].path.strokeColor = 'black';
-                    shotMap[key].path.opacity = previousOpacity - 0.01;
-                } else {
-                    delete shotMap[key];
-                }
-            });
-
-            startButton.onclick = function () {
-                if (hosting) {
-                    console.log('starting game!');
-                    gameStarted = true;
-                }
-            };
-
-        };
-
-        var renderFps = function () {
-            if (!fpsText) {
-                fpsText = new Paper.PointText(new Point(marginLeft + 5, marginTop + 20));
-                fpsText.fillColor = 'black';
-            } else {
-                fpsText.content = 'Server: ' + fps.toString();
-                fpsText.bringToFront();
-            }
-        };
-
-        var renderHud = function () {
-            if (!ammoText) {
-                ammoText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 40));
-                ammoText.fillColor = 'black';
-            }
-            if (!healthText) {
-                healthText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 20));
-                healthText.fillColor = 'black';
-            }
-            if (!groundText) {
-                groundText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 60));
-                healthText.fillColor = 'black';
-            }
-            if (player) {
-                if (player.h > 0) {
-                    healthText.content = Math.ceil(player.h / 10) + '% HP';
-                    if (player.g) {
-                        ammoText.content = player.g.n + ' - Ammo: ' + player.g.ammo + ' / ' + player.g.maxAmmo + ' - Reloaded: ' + player.re + '%';
-                    } else {
-                        ammoText.content = '';
-                    }
-                    if (player.gr.length > 0) {
-                        groundText.content = 'Press F to pickup: ' +
-                            player.gr.map(function (item) {
-                                return item.n;
-                            }).join(', ');
-                    } else {
-                        groundText.content = ''
-                    }
-                } else {
-                    healthText.content = 'You are dead';
-                }
-            }
-            ammoText.bringToFront();
-            healthText.bringToFront();
-            groundText.bringToFront();
-        };
-
-        var handleReloads = function () {
-            if(player){
-                if(player.re > 0){
-                    if(reloadPlaying === false){
-                        reloadPlaying = true;
-                        reloadSound.play();
-                    }
-                } else {
-                    reloadSound.stop();
-                    reloadPlaying = false;
-                }
-            }
-        };
-
-        Paper.install(window);
-        Paper.setup(canvas);
-
-        var currentTime;
-        view.onFrame = function () {
-            deleteObjects(toDelete);
-            renderObjects(playerArray);
-            renderObjects(wallArray);
-            renderObjects(itemArray);
-            renderShots();
-            handleReloads();
-
-            if (player) {
-                client.send(JSON.stringify({
-                    type: 'mouse',
-                    x: mouseX - (canvas.width / 2),
-                    y: mouseY - (canvas.height / 2),
-                    keys: keys,
-                    start: hosting && gameStarted,
-                    name: name
-                }));
-            }
-
-            renderHud();
-            renderFps();
         }
 
-        window.Paper = Paper;
+    };
 
-        canvas.onmousemove = function (e) {
-            mouseX = e.offsetX * window.devicePixelRatio;
-            mouseY = e.offsetY * window.devicePixelRatio;
-        };
+    var deleteObjects = function (objectIdArray) {
+        if (objectIdArray.forEach) {
+            objectIdArray.forEach(function (id) {
+                if (bodyMap[id]) {
+                    bodyMap[id].remove();
+                    delete bodyMap[id];
+                }
+            });
+        }
+    };
 
-        // var acceptInput = true;
-        canvas.onmouseenter = function () {
-            Object.keys(keys).forEach(function (key) {
-                keys[key] = 'onkeyup';
-            });
-        };
+    var renderShots = function () {
+        if (server.getShots().length > 0) {
+            gunShotSound.play();
+        }
+        server.getShots().forEach(function (shot) {
+            if (shot && !shotMap[shot.id]) {
+                shotMap[shot.id] = shot;
+                shotMap[shot.id].path = new Paper.Path.Line(new Paper.Point(shot.start.x + offsetX, shot.start.y + offsetY), new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY));
+                shotMap[shot.id].path.sendToBack();
+                shotMap[shot.id].path.strokeWidth = 1.5;
+                shotMap[shot.id].path.opacity = 0.2;
+                shotMap[shot.id].path.strokeColor = 'black';
 
-        canvas.onmouseout = function () {
-            // acceptInput = false;
-            Object.keys(keys).forEach(function (key) {
-                keys[key] = 'onkeyup';
-            });
-        };
-
-        window.onmousedown = function (event) {
-            sendEvent({
-                type: 'onmousedown',
-                which: event.which
-            });
-        };
-        window.onmouseup = function (event) {
-            sendEvent({
-                type: 'onmouseup',
-                which: event.which
-            });
-        };
-        window.onkeydown = function (event) {
-            if (event.key === 'Escape') {
-                var window = remote.getCurrentWindow();
-                window.close();
-            } else if (event.key === 'F11') {
-                event.preventDefault();
+                if (shot.hit === true) {
+                    var path = new Paper.Path.Circle(new Paper.Point(shot.end.x + offsetX, shot.end.y + offsetY), 5);
+                    path.opacity = 0.3;
+                    if (shot.hitEntityType === 'p') {
+                        path.fillColor = 'red';
+                        setTimeout(function () {
+                            path.remove();
+                        }, 50);
+                    } else {
+                        path.fillColor = 'yellow';
+                        setTimeout(function () {
+                            path.remove();
+                        }, 50);
+                    }
+                }
+            }
+        });
+        var shot, previousOpacity, previousStrokeWidth;
+        Object.keys(shotMap).forEach(function (key) {
+            previousOpacity = shotMap[key].path.opacity;
+            previousStrokeWidth = shotMap[key].path.strokeWidth;
+            shotMap[key].path.remove();
+            if (previousOpacity > 0.01) {
+                shotMap[key].path = new Paper.Path.Line(new Paper.Point(shotMap[key].start.x + offsetX, shotMap[key].start.y + offsetY), new Paper.Point(shotMap[key].end.x + offsetX, shotMap[key].end.y + offsetY));
+                shotMap[key].path.sendToBack();
+                shotMap[key].path.strokeWidth = previousStrokeWidth + 0.1;
+                shotMap[key].path.strokeColor = 'black';
+                shotMap[key].path.opacity = previousOpacity - 0.01;
             } else {
-                keys[event.key.toUpperCase()] = 'onkeydown';
-                sendEvent({
-                    keys: keys
-                });
+                delete shotMap[key];
+            }
+        });
+
+        startButton.onclick = function () {
+            if (hosting) {
+                console.log('starting game!');
+                server.startGame();
             }
         };
-        window.onkeyup = function (event) {
-            keys[event.key.toUpperCase()] = 'onkeyup';
-            sendEvent({
+
+    };
+
+    var renderFps = function () {
+        if (!fpsText) {
+            fpsText = new Paper.PointText(new Point(marginLeft + 5, marginTop + 20));
+            fpsText.fillColor = 'black';
+        } else {
+            fpsText.content = 'Server: ' + server.getFps().toString();
+            fpsText.bringToFront();
+        }
+    };
+
+    var renderHud = function () {
+        if (!ammoText) {
+            ammoText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 40));
+            ammoText.fillColor = 'black';
+        }
+        if (!healthText) {
+            healthText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 20));
+            healthText.fillColor = 'black';
+        }
+        if (!groundText) {
+            groundText = new Paper.PointText(new Point(marginLeft + 5, (canvas.height / window.devicePixelRatio) - marginTop - 60));
+            healthText.fillColor = 'black';
+        }
+        if (server.getPlayer()) {
+            if (server.getPlayer().h > 0) {
+                healthText.content = Math.ceil(server.getPlayer().h / 10) + '% HP';
+                if (server.getPlayer().g) {
+                    ammoText.content = server.getPlayer().g.n + ' - Ammo: ' + server.getPlayer().g.ammo + ' / ' + server.getPlayer().g.maxAmmo + ' - Reloaded: ' + server.getPlayer().re + '%';
+                } else {
+                    ammoText.content = '';
+                }
+                if (server.getPlayer().gr.length > 0) {
+                    groundText.content = 'Press F to pickup: ' +
+                        server.getPlayer().gr.map(function (item) {
+                            return item.n;
+                        }).join(', ');
+                } else {
+                    groundText.content = ''
+                }
+            } else {
+                healthText.content = 'You are dead';
+            }
+        }
+        ammoText.bringToFront();
+        healthText.bringToFront();
+        groundText.bringToFront();
+    };
+
+    var handleReloads = function () {
+        if(server.getPlayer()){
+            if(server.getPlayer().re > 0){
+                if(reloadPlaying === false){
+                    reloadPlaying = true;
+                    reloadSound.play();
+                }
+            } else {
+                reloadSound.stop();
+                reloadPlaying = false;
+            }
+        }
+    };
+
+    Paper.install(window);
+    Paper.setup(canvas);
+
+    var currentTime;
+    view.onFrame = function () {
+        if( server.getGameStarted()){
+            menuDiv.style.display = 'none';
+            lobbyDiv.style.display = 'none';
+        }
+        deleteObjects(server.getToDelete());
+        renderObjects(server.getPlayerMap());
+        renderObjects(server.getWallMap());
+        renderObjects(server.getItemMap());
+
+        renderShots();
+        handleReloads();
+
+        if (server.getPlayer()) {
+            server.sendEvent({
+                type: 'mouse',
+                x: mouseX - (canvas.width / 2),
+                y: mouseY - (canvas.height / 2),
+                keys: keys,
+                name: name
+            });
+        }
+
+        renderHud();
+        renderFps();
+    }
+
+    window.Paper = Paper;
+
+    canvas.onmousemove = function (e) {
+        mouseX = e.offsetX * window.devicePixelRatio;
+        mouseY = e.offsetY * window.devicePixelRatio;
+    };
+
+    // var acceptInput = true;
+    canvas.onmouseenter = function () {
+        Object.keys(keys).forEach(function (key) {
+            keys[key] = 'onkeyup';
+        });
+    };
+
+    canvas.onmouseout = function () {
+        // acceptInput = false;
+        Object.keys(keys).forEach(function (key) {
+            keys[key] = 'onkeyup';
+        });
+    };
+
+    window.onmousedown = function (event) {
+        server.sendEvent({
+            type: 'onmousedown',
+            which: event.which
+        });
+    };
+    window.onmouseup = function (event) {
+        server.sendEvent({
+            type: 'onmouseup',
+            which: event.which
+        });
+    };
+    window.onkeydown = function (event) {
+        if (event.key === 'Escape') {
+            var window = remote.getCurrentWindow();
+            window.close();
+        } else if (event.key === 'F11') {
+            event.preventDefault();
+        } else {
+            keys[event.key.toUpperCase()] = 'onkeydown';
+            server.sendEvent({
                 keys: keys
             });
-        };
-    });
-
-    client.on('error', function () {
-        alert("Error connecting to: " + joinInput.value);
-        window.location.reload();
-    });
-
-
+        }
+    };
+    window.onkeyup = function (event) {
+        keys[event.key.toUpperCase()] = 'onkeyup';
+        server.sendEvent({
+            keys: keys
+        });
+    };
 };
 
 joinButton.onclick = function () {

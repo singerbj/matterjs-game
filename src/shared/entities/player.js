@@ -200,8 +200,8 @@ module.exports = function (x, y) {
                 g: this.gun ? this.gun.serialize() : undefined,
                 re: this.reloaded,
                 h: this.health,
-                in: Helpers.serializeMap(this.inventory),
-                gr: Helpers.serializeMap(this.ground),
+                in: Helpers.serializeMapToArray(this.inventory),
+                gr: Helpers.serializeMapToArray(this.ground),
                 n: this.name
             }
         }
