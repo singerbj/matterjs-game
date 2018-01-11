@@ -137,6 +137,9 @@ module.exports = function (x, y) {
             var now = Date.now();
             if(now - this.lastPickupPutdown > 500){
                 this.lastPickupPutdown = now;
+                this.reloadStart = undefined;
+                this.reloaded = 0;
+                this.reloading = false;
                 var self = this;
                 if (this.health > 0) {
                     var groudKeys = Object.keys(this.ground);

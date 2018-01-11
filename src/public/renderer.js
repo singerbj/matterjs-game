@@ -42,8 +42,8 @@ var joinGame = function (name, startServer, ipToJoin) {
     var itemArray = [];
     var toDelete = [];
     var shots = [];
-    var reloads = [];
     var keys = {};
+    var reloadPlaying = false;
     var fps = -1;
     var player, decodedDataList, parsedData, mouseX = 0,
         mouseY = 0;
@@ -122,9 +122,6 @@ var joinGame = function (name, startServer, ipToJoin) {
             }
             if (parsedData.fps) {
                 fps = parsedData.fps;
-            }
-            if (parsedData.reloads) {
-                reloads = parsedData.reloads;
             }
         });
 
@@ -295,9 +292,17 @@ var joinGame = function (name, startServer, ipToJoin) {
         };
 
         var handleReloads = function () {
-            reloads.forEach(function () {
-                reloadSound.play();
-            });
+            if(player){
+                if(player.re > 0){
+                    if(reloadPlaying === false){
+                        reloadPlaying = true;
+                        reloadSound.play();
+                    }
+                } else {
+                    reloadSound.stop();
+                    reloadPlaying = false;
+                }
+            }
         };
 
         Paper.install(window);

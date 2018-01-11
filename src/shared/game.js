@@ -50,10 +50,6 @@ module.exports = function (startServer) {
                                     c.player.handlePickup(itemMap, Engine);
                                 } else if (key === 'R' && event.keys[key] === 'onkeydown' && c.player.gun && c.player.gun.ammo < c.player.gun.maxAmmo && !c.player.reloading) {
                                     c.player.reloading = true;
-                                    reloads.push({
-                                        x: c.player.x,
-                                        y: c.player.y
-                                    });
                                 } else if ((key === '1' || key === '2') && event.keys[key] === 'onkeydown') {
                                     c.player.switchWeapon(key);
                                 }
