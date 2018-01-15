@@ -94,17 +94,17 @@
                                 var body;
                                 if (entity.t === 'w') {
                                     body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
-                                    body.fillColor = 'green';
+                                    body.fillColor = '#333';
                                 } else if (entity.t === 'p') {
                                     body = new Paper.Path.Circle(entity.x + offsetX, entity.y + offsetY, entity.r);
                                     if (server.getPlayer() && server.getPlayer().i === entity.i) {
                                         body.fillColor = 'blue';
                                     } else {
-                                        body.fillColor = 'black';
+                                        body.fillColor = 'red';
                                     }
                                 } else if (entity.t === 'g') {
                                     body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
-                                    body.fillColor = 'orange';
+                                    body.fillColor = 'darkgreen';
                                     body.sendToBack();
                                 }
                                 body.applyMatrix = false;
@@ -267,7 +267,7 @@
                 Object.keys(server.getPlayerMap()).forEach(function (key) {
                     currentPlayer = server.getPlayerMap()[key];
                     var div = document.createElement('div');
-                    div.innerText = currentPlayer.n;
+                    div.innerText = currentPlayer.n || "Unnamed Player";
                     playersList.appendChild(div);
                 });
             }
