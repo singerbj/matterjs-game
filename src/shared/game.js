@@ -5,6 +5,7 @@ var MapBuilder = require('./mapbuilder');
 var WebSocket = require('ws');
 var Decoder = new TextDecoder("utf-8");
 var Matter = require('matter-js/build/matter.js');
+var Circle = require('./entities/circle');
 
 
 module.exports = function (startServer, ipToJoin) {
@@ -14,6 +15,7 @@ module.exports = function (startServer, ipToJoin) {
     var toDelete = [];
     var clients = {};
     var reloads = [];
+    var circle = undefined;
     var mapSize = 4000;
     var gameStarted = false;
     var fps;
@@ -32,6 +34,13 @@ module.exports = function (startServer, ipToJoin) {
             shots = [];
             var arrayOfShots,
                 shot, hitEntity;
+
+            if(gameStarted){
+                // Matter.Body.scale(circle.matterjs, 0.5, 0.5);
+                circle.w *= 0.99999;
+                circle.h *= 0.99999;
+                circle.matterjs = new Circle(circle.x, circle.y, circle.w);
+            }
             Object.keys(playerMap).forEach(function (id) {
                 playerMap[id].x = playerMap[id].matterjs.position.x;
                 playerMap[id].y = playerMap[id].matterjs.position.y;
@@ -75,6 +84,7 @@ module.exports = function (startServer, ipToJoin) {
 
             Object.keys(playerMap).forEach(function (id) {
                 var currentPlayer = playerMap[id];
+
                 if (currentPlayer && currentPlayer.health > 0) {
                     if (currentPlayer.moving.up && !currentPlayer.moving.down) {
                         velocity.y = -currentPlayer.speed;
@@ -93,7 +103,6 @@ module.exports = function (startServer, ipToJoin) {
                     }
 
                     if (velocity.x !== 0 && velocity.y !== 0) {
-                        var change = Math.sqrt()
                         if (velocity.x > 0) {
                             velocity.x = currentPlayer.diagonalSpeed;
                         } else {
@@ -110,6 +119,10 @@ module.exports = function (startServer, ipToJoin) {
 
                     currentPlayer.x = currentPlayer.matterjs.position.x;
                     currentPlayer.y = currentPlayer.matterjs.position.y;
+
+                    if(!currentPlayer.insideCircle){
+                        currentPlayer.health -= 0.3;
+                    }
                 } else if (playerMap[currentPlayer.id] && currentPlayer.health === 0) {
                     toDelete.push(currentPlayer.id);
                     Engine.removePlayer(playerMap[currentPlayer.id]);
@@ -131,7 +144,8 @@ module.exports = function (startServer, ipToJoin) {
                     shots: shots,
                     fps: fps,
                     reloads: reloads,
-                    gameStarted: gameStarted
+                    gameStarted: gameStarted,
+                    circle: circle
                 }));
                 reloads = [];
             });
@@ -238,6 +252,8 @@ module.exports = function (startServer, ipToJoin) {
             itemMap[item.id] = item;
             Engine.addItem(item);
         });
+        circle = mapBodies.circle;
+        Engine.addItem(circle);
     } else {
         client = new WebSocket('ws://' + (ipToJoin !== undefined ? ipToJoin : '127.0.0.1') + ':6574');
         client.on('error', function () {
@@ -296,6 +312,12 @@ module.exports = function (startServer, ipToJoin) {
         },
         getPlayer: function () {
             return player.serialize ? player.serialize() : player;
+        },
+        getCircle: function(){
+            console.log(circle);
+            var o = {};
+            o[circle.id] = circle.serialize();
+            return o;
         },
         getShots: function () {
             return shots;

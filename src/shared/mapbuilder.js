@@ -1,5 +1,6 @@
 var Tiles = require('./tiles');
 var Wall = require('./entities/wall');
+var Circle = require('./entities/circle');
 var Helpers = require('./helpers');
 
 var possibleItems = [
@@ -22,7 +23,8 @@ module.exports = {
 
         var bodies = {
             walls: [],
-            items: []
+            items: [],
+            circle: undefined
         };
 
         var topLeft = {
@@ -51,6 +53,8 @@ module.exports = {
         bodies.walls.push(new Wall(bottomLeft.x, bottomLeft.y, mapWidth, this.wallWidth));
         //left
         bodies.walls.push(new Wall(topLeft.x, topLeft.y - this.wallWidth, this.wallWidth, mapHeight + this.wallWidth));
+        //create Circle
+        bodies.circle = new Circle(Helpers.rand(0, mapWidth), Helpers.rand(0, mapHeight), mapWidth > mapHeight ? mapWidth : mapHeight);
 
         //for each tile space, select a random tile and draw the walls relative to the tile space's position
         var i, j, x, y, generatedTile, randomTile;

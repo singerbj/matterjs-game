@@ -106,11 +106,23 @@
                                     body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
                                     body.fillColor = 'orange';
                                     body.sendToBack();
+                                }else if(entity.t === 'c'){
+                                    body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                                    body.fillColor = 'lightblue';
+                                    body.sendToBack();
                                 }
                                 body.applyMatrix = false;
                                 bodyMap[entity.i] = body;
                             } else {
                                 bodyMap[entity.i].position = new Paper.Point(entity.x + offsetX, entity.y + offsetY);
+                                if(entity.t === 'c'){
+                                    bodyMap[entity.i].remove();
+                                    body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
+                                    body.fillColor = 'lightblue';
+                                    body.sendToBack();
+                                    body.applyMatrix = false;
+                                    bodyMap[entity.i] = body;
+                                }
                             }
 
                             if (entity.a) {
@@ -275,6 +287,7 @@
             renderObjects(server.getPlayerMap());
             renderObjects(server.getWallMap());
             renderObjects(server.getItemMap());
+            renderObjects(server.getCircle());
 
             renderShots();
             handleReloads();

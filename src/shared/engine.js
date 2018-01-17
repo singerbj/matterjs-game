@@ -19,7 +19,20 @@ module.exports = function (beforeCallback, afterCallback) {
 
         Matter.Events.on(engine, "collisionStart", function (event) {
             event.pairs.forEach(function (pair) {
-                if (pair.bodyA.entity.type === 'g' || pair.bodyB.entity.type === 'g') {
+                if(pair.bodyA.entity.type === 'c' || pair.bodyB.entity.type === 'c'){
+                    pair.isActive = false;
+                    if (pair.bodyA.entity.type === 'p' || pair.bodyB.entity.type === 'p') {
+                        var player, circle;
+                        if (pair.bodyA.entity.type === 'p') {
+                            player = pair.bodyA.entity;
+                            circle = pair.bodyB.entity;
+                        } else {
+                            player = pair.bodyB.entity;
+                            circle = pair.bodyA.entity;
+                        }
+                        player.insideCircle = true;
+                    }
+                } else if (pair.bodyA.entity.type === 'g' || pair.bodyB.entity.type === 'g') {
                     pair.isActive = false;
                     var player, item;
                     if (pair.bodyA.entity.type === 'p') {
@@ -31,6 +44,25 @@ module.exports = function (beforeCallback, afterCallback) {
                     }
                     if (!item.deleted) {
                         player.ground[item.id] = item;
+                    }
+                }
+            });
+        });
+
+        Matter.Events.on(engine, "collisionEnd", function (event) {
+            event.pairs.forEach(function (pair) {
+                if(pair.bodyA.entity.type === 'c' || pair.bodyB.entity.type === 'c'){
+                    pair.isActive = false;
+                    if (pair.bodyA.entity.type === 'p' || pair.bodyB.entity.type === 'p') {
+                        var player, circle;
+                        if (pair.bodyA.entity.type === 'p') {
+                            player = pair.bodyA.entity;
+                            circle = pair.bodyB.entity;
+                        } else {
+                            player = pair.bodyB.entity;
+                            circle = pair.bodyA.entity;
+                        }
+                        player.insideCircle = false;
                     }
                 }
             });

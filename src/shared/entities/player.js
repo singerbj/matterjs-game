@@ -42,6 +42,7 @@ module.exports = function (x, y) {
         gun: undefined,
         inventory: {},
         ground: {},
+        insideCircle: true,
         handleFiring: function (engine) {
             var self = this;
             var time = Date.now();
@@ -202,7 +203,8 @@ module.exports = function (x, y) {
                 h: this.health,
                 in: Helpers.serializeMapToArray(this.inventory),
                 gr: Helpers.serializeMapToArray(this.ground),
-                n: this.name
+                n: this.name,
+                ic: this.insideCircle
             }
         }
     };
