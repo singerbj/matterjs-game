@@ -2,8 +2,8 @@ var Matter = require('matter-js/build/matter.js');
 var Helpers = require('../../../helpers');
 
 module.exports = function (x, y) {
-    var width = 10;
-    var height = 10;
+    var width = 40;
+    var height = 20;
     var adjustedX = x + (width / 2);
     var adjustedY = y + (height / 2);
     var body = Matter.Bodies.rectangle(adjustedX, adjustedY, width, height, {
