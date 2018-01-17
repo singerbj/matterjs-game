@@ -115,13 +115,12 @@
                                 bodyMap[entity.i] = body;
                             } else {
                                 bodyMap[entity.i].position = new Paper.Point(entity.x + offsetX, entity.y + offsetY);
-                                if(entity.t === 'c'){
+                                if(bodyMap[entity.i] === 'c'){
                                     bodyMap[entity.i].remove();
-                                    body = new Paper.Path.Rectangle(entity.x + offsetX, entity.y + offsetY, entity.w, entity.h);
-                                    body.fillColor = 'lightblue';
-                                    body.sendToBack();
-                                    body.applyMatrix = false;
-                                    bodyMap[entity.i] = body;
+                                    bodyMap[entity.i] = new Paper.Path.Rectangle(bodyMap[entity.i].x + offsetX, bodyMap[entity.i].y + offsetY, bodyMap[entity.i].w, bodyMap[entity.i].h);
+                                    bodyMap[entity.i].fillColor = 'lightblue';
+                                    bodyMap[entity.i].sendToBack();
+                                    bodyMap[entity.i].applyMatrix = false;
                                 }
                             }
 

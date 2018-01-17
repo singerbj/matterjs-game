@@ -314,7 +314,6 @@ module.exports = function (startServer, ipToJoin) {
             return player.serialize ? player.serialize() : player;
         },
         getCircle: function(){
-            console.log(circle);
             var o = {};
             o[circle.id] = circle.serialize();
             return o;
